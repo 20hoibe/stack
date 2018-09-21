@@ -15,7 +15,7 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "react-dev": "BROWSER=none npm start",
-    "electron-dev": "electron .",
+    "electron-dev": "nodemon --watch public/electron.js node_modules/.bin/electron .",
     "all-dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-pack": "build build/electron.js",
     "preelectron-pack": "npm run build"
@@ -24,6 +24,7 @@
     "concurrently": "^4.0.1",
     "electron": "^3.0.0",
     "electron-builder": "^20.28.4",
+    "nodemon": "^1.18.4",
     "wait-on": "^3.0.1"
   },
   "homepage": "./",
