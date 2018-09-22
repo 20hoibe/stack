@@ -59,6 +59,10 @@ app.on('ready', () => {
   globalShortcut.register('CommandOrControl+Shift+J', () => {
     createCreateTaskWindow();
   });
+
+  globalShortcut.register('CommandOrControl+Shift+K', () => {
+    screenshotWindow = createScreenshotWindow();
+  });
 });
 
 app.on('window-all-closed', () => {
