@@ -50,12 +50,15 @@ canvas.onmouseup = event => {
       for (let i = 0; i < sources.length; ++i) {
         if (sources[i].id.startsWith('screen')) {
           let thumbnail = sources[i].thumbnail;
-          const result = thumbnail.crop({
-            x: captureX,
-            y: captureY,
+          const rect = {
+            x: captureX + window.screenLeft,
+            y: captureY + window.screenTop,
             width: captureWidth,
             height: captureHeight
-          });
+          };
+          ipcRenderer.send('log', rect);
+          const result = thumbnail.crop(rect);
+          ipcRenderer.send('log', thumbnail.getSize());
           ipcRenderer.send('image', thumbnail.toDataURL());
         }
       }
