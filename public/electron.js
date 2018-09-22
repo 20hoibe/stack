@@ -143,7 +143,7 @@ const taskNotification = task => {
     case 'image': {
       const notification = new Notification({
         title: 'Add Task',
-        icon: task.payload
+        icon: nativeImage.createFromDataURL(task.payload)
       });
 
       notification.show();
