@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {connect} from './connect';
 import CreateTask from './CreateTask';
+import ListTask from './ListTask';
 
 export default connect(state => ({
   tasks: state.tasks
@@ -11,6 +12,9 @@ export default connect(state => ({
     switch (type) {
       case 'create-task': {
         return (<CreateTask />);
+      }
+      case 'list-task': {
+        return (<ListTask />);
       }
       default: {
         return 'unknown type';

@@ -17,8 +17,8 @@ const log = (origin, what) => {
 let mainWindow;
 let screenshotWindow;
 
-const createWindow = param => {
-  mainWindow = new BrowserWindow({width: 480, height: 120, show: false});
+const createWindow = (param, {width, height}) => {
+  mainWindow = new BrowserWindow({width, height, show: false});
   mainWindow.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
   mainWindow.on('closed', () => mainWindow = null);
 
@@ -32,6 +32,15 @@ const createWindow = param => {
   setWindowState(id, param);
 };
 
+
+const createCreateTaskWindow = () => {
+  createWindow({type: 'create-task'}, {width: 480, height: 120});
+};
+
+const createListTaskWindow = () => {
+  createWindow({type: 'list-task'}, {width: 640, height: 1024});
+};
+
 const createScreenshotWindow = () => {
   let screenshot = new BrowserWindow({
     frame: false,
@@ -42,14 +51,18 @@ const createScreenshotWindow = () => {
   screenshot.on('close', () => screenshotWindow = null);
   screenshot.show();
   return screenshot;
-}
+};
 
 let tray;
 app.on('ready', () => {
+  
   tray = new Tray(__dirname + '/assets/tray.png');
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t${process.platform !== 'darwin' ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
+    }},
+    {label: 'Show List', type: 'normal', click: () => {
+      createListTaskWindow();
     }},
     {label: 'Quit', type: 'normal', click: () => {
       app.quit();
@@ -67,6 +80,10 @@ app.on('ready', () => {
 
   globalShortcut.register('CommandOrControl+Shift+K', () => {
     screenshotWindow = createScreenshotWindow();
+  });
+
+  globalShortcut.register('CommandOrControl+Shift+L', () => {
+    createListTaskWindow();
   });
 });
 
@@ -173,9 +190,6 @@ const setWindowState = (id, windowState) => {
   setState({windowStates});
 };
 
-const createCreateTaskWindow = () => {
-  createWindow({type: 'create-task'});
-};
 
 
 // for initial state, sync event
