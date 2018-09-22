@@ -21,13 +21,13 @@ const createWindow = param => {
   mainWindow = new BrowserWindow({width: 480, height: 120, show: false});
   mainWindow.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
   mainWindow.on('closed', () => mainWindow = null);
-  
+
   // postpone show window, until loaded
   mainWindow.webContents.once('dom-ready', () => {
     mainWindow.show();
     mainWindow.focus();
   });
-  
+
   const {id} = mainWindow;
   setWindowState(id, param);
 };
@@ -101,24 +101,23 @@ ipcMain.on('push', (event, arg) => {
   }
 });
 
-<<<<<<< HEAD
-ipcMain.on('screenshot', (event, arg) => {
-  console.log(arg);
-  screenshotWindow.close();
-=======
 ipcMain.on('image', (event, arg) => {
-  
-  const placeholder = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);
+
+  let image;
+  if (arg === null || arg === undefined) {
+    image = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);
+  } else {
+    image = arg;
+  }
 
   addTask({
     type: 'image',
-    payload: placeholder
+    payload: image
   });
 
   if (screenshotWindow) {
     screenshotWindow.close();
   }
->>>>>>> 8216d5cb7fad9e332f7e1d3ac5aeca6187a33acb
 });
 
 

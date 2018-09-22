@@ -51,20 +51,16 @@ canvas.onmouseup = event => {
       }
     }, (error, sources) => {
       if (error) throw error
-      console.log(sources);
       for (let i = 0; i < sources.length; ++i) {
-        console.log(sources[i]);
         if (sources[i].id.startsWith('screen')) {
           let thumbnail = sources[i].thumbnail;
-          console.log(thumbnail);
           thumbnail.crop({
             x: captureX,
             y: captureY,
             width: captureWidth,
             height: captureHeight
           });
-          console.log(thumbnail);
-          ipcRenderer.send('screenshot', thumbnail.toDataURL());
+          ipcRenderer.send('image', thumbnail.toDataURL());
         }
       }
     })
