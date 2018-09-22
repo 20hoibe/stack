@@ -1,4 +1,4 @@
-const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu} = require('electron');
+const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
 
 const logMain = what => {
@@ -88,7 +88,7 @@ app.on('browser-window-created', (event, window) => {
 });
 
 ipcMain.on('push', (event, arg) => {
-  if (screenshotWindow === null || screenshotWindow === undefined) {
+  if (!screenshotWindow) {
     screenshotWindow = createScreenshotWindow();
     console.log({
       arg
@@ -97,8 +97,17 @@ ipcMain.on('push', (event, arg) => {
 });
 
 ipcMain.on('image', (event, arg) => {
-  console.log(arg);
-  screenshotWindow.close();
+  
+  const placeholder = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);
+
+  addTask({
+    type: 'image',
+    payload: placeholder
+  });
+
+  if (screenshotWindow) {
+    screenshotWindow.close();
+  }
 });
 
 
@@ -119,6 +128,15 @@ const taskNotification = task => {
       const notification = new Notification({
         title: `Add Task ${task.payload}`,
         
+      });
+
+      notification.show();
+      break;
+    }
+    case 'image': {
+      const notification = new Notification({
+        title: 'Add Task',
+        icon: task.payload
       });
 
       notification.show();
