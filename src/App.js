@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
-import * as taskActions from './task-actions';
 import {connect} from './connect';
 import {log} from './log';
+import CreateTask from './CreateTask';
 const {ipcRenderer} = window.require('electron');
 
 export default connect(state => ({
   tasks: state.tasks
 }))(class App extends Component {
 
+<<<<<<< 045d6a87f90873f02bb4fc2b6591e55cf293db33
   handleClick = () => {
     ipcRenderer.send('task', taskActions.addTextTask('eat cats'));
     log('send "eat cats" task');
@@ -38,5 +39,17 @@ export default connect(state => ({
         <button onClick={this.pushTask}>add task</button>
       </div>
     );
+=======
+  render() {
+    const {type} = (this.props && this.props.windowState) || {};
+    switch (type) {
+      case 'create-task': {
+        return (<CreateTask />);
+      }
+      default: {
+        return 'unknown type';
+      }
+    }
+>>>>>>> create task
   }
 });

@@ -1,6 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-const {app, ipcMain, BrowserWindow, globalShortcut} = require('electron');
+const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu} = require('electron');
 const isDev = require('electron-is-dev');
 
 const logMain = what => {
@@ -19,10 +17,14 @@ const log = (origin, what) => {
 let mainWindow;
 let screenshotWindow;
 
-const createWindow = () => {
+const createWindow = param => {
   mainWindow = new BrowserWindow({width: 900, height: 680});
-  mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
   mainWindow.on('closed', () => mainWindow = null);
+  mainWindow.focus();
+
+  const {id} = mainWindow;
+  setWindowState(id, param);
 };
 
 function createScreenshotWindow() {
@@ -37,33 +39,43 @@ function createScreenshotWindow() {
   return screenshot;
 }
 
+let tray;
 app.on('ready', () => {
-  createWindow();
+  tray = new Tray(__dirname + '/assets/tray.png');
+  const menu = Menu.buildFromTemplate([
+    {label: `Create Task\t${process.platform !== 'darwin' ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
+      createCreateTaskWindow();
+    }},
+    {label: 'Quit', type: 'normal', click: () => {
+      app.quit();
+    }}
+  ]);
+  tray.setTitle('Stack');
+  tray.setToolTip('Stack');
+  tray.setContextMenu(menu);
+});
 
+app.on('ready', () => {
   globalShortcut.register('CommandOrControl+Shift+J', () => {
-    addTask({
-      type: 'text',
-      payload: 'you pressed Cmd/Ctrl+Shift+J'
-    });
+    createCreateTaskWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // if (process.platform !== 'darwin') {
+  //   app.quit();
+  // }
 });
 
 app.on('activate', () => {
   if (mainWindow === null) {
-    createWindow();
+    // createWindow('test2');
   }
 });
 
 const windows = new Set();
 
 app.on('browser-window-created', (event, window) => {
-  console.log('browser window created');
   windows.add(window);
 
   window.once('close', () => {
@@ -97,6 +109,24 @@ const setState = state => {
 };
 
 
+const taskNotification = task => {
+  switch (task.type) {
+    case 'text': {
+      const notification = new Notification({
+        title: `Add Task ${task.payload}`,
+        
+      });
+
+      notification.show();
+      break;
+    }
+    default: {
+      const notification = new Notification({title: 'added unknown task type'});
+      notification.show();
+      break;
+    }
+  }
+};
 
 
 // business use-cases
@@ -104,10 +134,19 @@ const addTask = task => {
   const tasks = [...(appState.tasks || [])];
   tasks.push(task);
   setState({tasks});
+
+  taskNotification(task);
 };
 
+const setWindowState = (id, windowState) => {
+  const windowStates = {...(appState.windowStates || {})};
+  windowStates[id] = windowState;
+  setState({windowStates});
+};
 
-
+const createCreateTaskWindow = () => {
+  createWindow({type: 'create-task'});
+};
 
 
 // for initial state, sync event
@@ -125,7 +164,7 @@ ipcMain.on('task', (event, arg) => {
       break;
     }
     default: {
-      console.log({event, arg});
+      logMain({event, arg});
       console.warn('wot?');
     }
   }
