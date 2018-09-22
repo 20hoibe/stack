@@ -13,6 +13,13 @@ export default connect(state => ({
     log('send "eat cats" task');
   };
 
+  pushTask = () => {
+    ipcRenderer.send('push', {
+      title: "foo",
+      payload: "bar"
+    });
+  };
+
   render() {
 
     return (
@@ -28,6 +35,7 @@ export default connect(state => ({
           })}
         </ul>
         <button onClick={this.handleClick}>add eat cats task</button>
+        <button onClick={this.pushTask}>add task</button>
       </div>
     );
   }
