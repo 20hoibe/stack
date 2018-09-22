@@ -1,9 +1,10 @@
 const {
   ipcRenderer,
+  desktopCapturer,
   remote
 } = window.require('electron');
-let mouseDown = false;
 
+let mouseDown = false;
 let startPoint = {
   x: 0,
   y: 0
@@ -37,10 +38,39 @@ canvas.onmouseup = event => {
     endPoint.x = event.pageX;
     endPoint.y = event.pageY;
 
-    setTimeout(() => {
-      canvas.style.cursor = "default";
-      ipcRenderer.sendSync('image', "new screenshot");
-    }, 300);
+    const captureX = (event.pageX < startPoint.x) ? event.pageX : startPoint.x;
+    const captureY = (event.pageY < startPoint.y) ? event.pageY : startPoint.y;
+    const captureWidth = Math.abs(event.pageX - startPoint.x);
+    const captureHeight = Math.abs(event.pageY - startPoint.y);
+
+    desktopCapturer.getSources({
+      types: ['window', 'screen'],
+      thumbnailSize: {
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+    }, (error, sources) => {
+      if (error) throw error
+      console.log(sources);
+      for (let i = 0; i < sources.length; ++i) {
+        console.log(sources[i]);
+        if (sources[i].id.startsWith('screen')) {
+          let thumbnail = sources[i].thumbnail;
+          console.log(thumbnail);
+          thumbnail.crop({
+            x: captureX,
+            y: captureY,
+            width: captureWidth,
+            height: captureHeight
+          });
+          console.log(thumbnail);
+          ipcRenderer.send('screenshot', thumbnail.toDataURL());
+        }
+      }
+    })
+    // setTimeout(() => {
+    //   canvas.style.cursor = "default";
+    // }, 300);
   }
 }
 

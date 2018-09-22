@@ -1,7 +1,7 @@
 import React from 'react';
-import {log} from './log';
-const {ipcRenderer} = window.require('electron');
+const {ipcRenderer, remote} = window.require('electron');
 
+const id = remote.getCurrentWindow().id;
 
 export const connect = stateToPropsMapFn => innerClass => {
   class ConnectClass extends React.Component {
@@ -27,8 +27,11 @@ export const connect = stateToPropsMapFn => innerClass => {
   
     render() {
       const InnerClass = innerClass;
+      const {appState} = this.state;
 
-      const props = (stateToPropsMapFn && stateToPropsMapFn(this.state.appState)) || this.state.appState;
+      const props = (stateToPropsMapFn && stateToPropsMapFn(appState)) || {};
+
+      props.windowState = appState && appState.windowStates && appState.windowStates[id];
   
       return (
         <InnerClass {...props} />
