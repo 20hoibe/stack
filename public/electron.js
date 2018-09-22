@@ -25,7 +25,7 @@ const createWindow = () => {
   mainWindow.on('closed', () => mainWindow = null);
 };
 
-function createScreenshotWindow() {
+const createScreenshotWindow = () => {
   let screenshot = new BrowserWindow({
     frame: false,
     transparent: true
@@ -80,7 +80,7 @@ ipcMain.on('push', (event, arg) => {
   }
 });
 
-ipcMain.on('image', (event, arg) => {
+ipcMain.on('screenshot', (event, arg) => {
   console.log(arg);
   screenshotWindow.close();
 });
