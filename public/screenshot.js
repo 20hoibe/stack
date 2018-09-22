@@ -44,17 +44,13 @@ canvas.onmouseup = event => {
     const captureHeight = Math.abs(event.pageY - startPoint.y);
 
     desktopCapturer.getSources({
-      types: ['window', 'screen'],
-      thumbnailSize: {
-        width: window.innerWidth,
-        height: window.innerHeight
-      }
+      types: ['screen']
     }, (error, sources) => {
       if (error) throw error
       for (let i = 0; i < sources.length; ++i) {
         if (sources[i].id.startsWith('screen')) {
           let thumbnail = sources[i].thumbnail;
-          thumbnail.crop({
+          const result = thumbnail.crop({
             x: captureX,
             y: captureY,
             width: captureWidth,
