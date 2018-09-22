@@ -26,12 +26,18 @@ export default connect()(class CreateTask extends React.Component {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <div>
-          <input ref={this.textRef} type="text" placeholder="wot?" />
-          <button type="submit">Save</button>
+      <div className="container">
+        <div className="row">
+          <div className="col-sm">
+            <form onSubmit={this.handleSubmit}>
+              <div className="form-group">
+                <input ref={this.textRef} type="text" className="form-control" placeholder="wot?" />
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </div>
     );
   }
 });

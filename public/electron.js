@@ -18,11 +18,16 @@ let mainWindow;
 let screenshotWindow;
 
 const createWindow = param => {
-  mainWindow = new BrowserWindow({width: 900, height: 680});
+  mainWindow = new BrowserWindow({width: 480, height: 120, show: false});
   mainWindow.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
   mainWindow.on('closed', () => mainWindow = null);
-  mainWindow.focus();
-
+  
+  // postpone show window, until loaded
+  mainWindow.webContents.once('dom-ready', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+  
   const {id} = mainWindow;
   setWindowState(id, param);
 };
@@ -127,15 +132,12 @@ const setState = state => {
   }
 };
 
-
 const taskNotification = task => {
   switch (task.type) {
     case 'text': {
       const notification = new Notification({
-        title: `Add Task ${task.payload}`,
-        
+        title: `Add Task "${task.payload}"`
       });
-
       notification.show();
       break;
     }
