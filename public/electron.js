@@ -1,6 +1,19 @@
-const {app, ipcMain, BrowserWindow, Tray, Menu, globalShortcut} = require('electron');
 const path = require('path');
+const {app, ipcMain, BrowserWindow, globalShortcut} = require('electron');
 const isDev = require('electron-is-dev');
+
+const logMain = what => {
+  log('electron', what);
+};
+
+const logRenderer = what => {
+  log('renderer', what);
+};
+
+const log = (origin, what) => {
+  console.log(origin, what);
+};
+
 
 let mainWindow;
 
@@ -14,8 +27,10 @@ app.on('ready', () => {
   createWindow();
 
   globalShortcut.register('CommandOrControl+Shift+J', () => {
-    console.log('Command+Shift+Alt+J');
-    // make screenshot
+    addTask({
+      type: 'text',
+      payload: 'you pressed Cmd/Ctrl+Shift+J'
+    });
   });
 });
 
@@ -31,15 +46,71 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on('async', (event, arg) => {  
-  console.log({arg});
-  const tray = new Tray(__dirname + '/assets/tray.png')
-  const contextMenu = Menu.buildFromTemplate([
-    {label: 'Item1', type: 'radio'},
-    {label: 'Item2', type: 'radio'},
-    {label: 'Item3', type: 'radio', checked: true},
-    {label: 'Item4', type: 'radio'}
-  ])
-  tray.setToolTip('This is my application.')
-  tray.setContextMenu(contextMenu)
+
+
+
+const windows = new Set();
+
+app.on('browser-window-created', (event, window) => {
+  console.log('browser window created');
+  windows.add(window);
+
+  window.once('close', () => {
+    windows.delete(window);
+  });
 });
+
+
+
+let appState = {};
+const setState = state => {
+  appState = {...appState, ...state};
+  
+  for (const window of windows) {
+    window.webContents.send('state', appState);
+  }
+};
+
+
+
+
+// business use-cases
+const addTask = task => {
+  const tasks = [...(appState.tasks || [])];
+  tasks.push(task);
+  setState({tasks});
+};
+
+
+
+
+
+// for initial state, sync event
+ipcMain.on('request-state', event => {
+  event.returnValue = appState;
+});
+
+
+
+// task channel
+ipcMain.on('task', (event, arg) => {
+  switch (arg.type) {
+    case 'add': {
+      addTask(arg.task);
+      break;
+    }
+    default: {
+      console.log({event, arg});
+      console.warn('wot?');
+    }
+  }
+});
+
+
+
+
+// log channel, for React components logging in main thread
+ipcMain.on('log', (event, arg) => {
+  logRenderer(arg);
+});
+

@@ -1,27 +1,34 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
-const {ipcRenderer, remote} = window.require('electron');
+import * as taskActions from './task-actions';
+import {connect} from './connect';
+import {log} from './log';
+const {ipcRenderer} = window.require('electron');
 
-class App extends Component {
+export default connect(state => ({
+  tasks: state.tasks
+}))(class App extends Component {
+
   handleClick = () => {
-    ipcRenderer.send('async', 1);
-    
+    ipcRenderer.send('task', taskActions.addTextTask('eat cats'));
+    log('send "eat cats" task');
   };
 
   render() {
+
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
+      <div>
+        <header>
+          <h1>Task Stack</h1>
         </header>
-        <p className="App-intro">
-          <button onClick={this.handleClick}>tray</button>
-        </p>
+        <ul>
+          {this.props.tasks && this.props.tasks.map((task, index) => {
+            return (
+              <li key={index}>{JSON.stringify(task)}</li>
+            );
+          })}
+        </ul>
+        <button onClick={this.handleClick}>add eat cats task</button>
       </div>
     );
   }
-}
-
-export default App;
+});
