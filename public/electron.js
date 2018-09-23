@@ -84,7 +84,7 @@ app.on('ready', () => {
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
     }},
-    {label: `Create Screenshot\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
+    {label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
       toggleScreenshotWindow();
     }},
     {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {

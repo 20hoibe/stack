@@ -5,5 +5,6 @@ Keep track of your tasks. But don't get lost in organization.
 
 - Ctrl+Shift+J: Create new Task
 - Ctrl+Shift+K: Make Screenshot
-- Ctrl+Shift+L: Show Task List
+- Ctrl+Shift+I: Show Current Task
+- Ctrl+Shift+L: Show List
 - Ctrl+Shift+U: Pop Task
