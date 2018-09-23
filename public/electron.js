@@ -94,7 +94,7 @@ const toggleScreenshotWindow = () => {
     transparent: true
   });
   screenshotWindow.maximize();
-  screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${path.join(__dirname, '../build/screenshot.html')}`);
+  screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
   screenshotWindow.on('close', () => screenshotWindow = null);
   screenshotWindow.show();
   return screenshotWindow;
@@ -112,7 +112,7 @@ const notifyCurrentTask = () => {
 
 let tray;
 app.on('ready', () => {
-  
+
   tray = new Tray(__dirname + '/assets/tray.png');
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
@@ -161,7 +161,7 @@ app.on('ready', () => {
   });
 });
 
-// 
+//
 app.on('window-all-closed', () => {});
 
 app.on('activate', () => {
@@ -268,7 +268,7 @@ const popTask = () => {
 
   const tasks = [...(appState.tasks || [])];
   const oldTask = tasks.shift();
-  
+
   setState({tasks});
 
   taskNotification({description: 'Pop Task', task: oldTask});
