@@ -1,9 +1,9 @@
 # stack
 Keep track of your tasks. But don't get lost in organization.
 
-## Features
+## Manual
 
-- create task via text
-- create task via screenshot
-- pop task (finish)
-- see current task
+- Ctrl+Shift+J: Create new Task
+- Ctrl+Shift+K: Make Screenshot
+- Ctrl+Shift+L: Show Task List
+- Ctrl+Shift+U: Pop Task

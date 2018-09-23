@@ -89,6 +89,10 @@ app.on('ready', () => {
   globalShortcut.register('CommandOrControl+Shift+L', () => {
     toggleListTaskWindow();
   });
+
+  globalShortcut.register('CommandOrControl+Shift+U', () => {
+    popTask();
+  });
 });
 
 app.on('window-all-closed', () => {
@@ -196,6 +200,24 @@ const deleteTask = index => {
   setState({tasks});
 
   taskNotification({description: 'Delete Task', task: oldTask});
+};
+
+const popTask = () => {
+  if (!appState || !appState.tasks || appState.tasks.length === 0) {
+    const notification = new Notification({
+      title: 'Cannot pop task from emtpy task list'
+    });
+
+    notification.show();
+    return;
+  }
+
+  const tasks = [...(appState.tasks || [])];
+  const oldTask = tasks.pop();
+  
+  setState({tasks});
+
+  taskNotification({description: 'Pop Task', task: oldTask});
 };
 
 const setWindowState = (id, windowState) => {
