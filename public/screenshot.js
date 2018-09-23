@@ -123,6 +123,8 @@ canvas.onmouseup = event => {
       height: captureHeight = Math.abs(event.pageY - startPoint.y)
     };
 
+    cls();
+
     takeScreenShot(roi.x, roi.y, roi.width, roi.height)
       .then(scrot => ipcRenderer.send('image', scrot));
   }
