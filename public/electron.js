@@ -1,3 +1,4 @@
+const fs = require('fs');
 const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
 const isMac = process.platform === 'darwin';
@@ -13,6 +14,39 @@ const logRenderer = what => {
 const log = (origin, what) => {
   console.log(origin, what);
 };
+
+
+const stateFilePath = app.getPath('userData') + '/state.json';
+logMain(`using state file: ${stateFilePath}`);
+
+let appState;
+try {
+  const appStateString = fs.readFileSync(stateFilePath, {flag: 'r'});
+  appState = JSON.parse(appStateString);
+} catch (e) {
+  appState = {};
+}
+
+const setState = state => {
+  appState = {...appState, ...state};
+
+  try {
+    fs.writeFileSync(stateFilePath, JSON.stringify(appState));
+  } catch (e) {
+    console.error(e);
+  }
+
+  for (const window of windows) {
+    window.webContents.send('state', appState);
+  }
+};
+
+const setWindowState = (id, windowState) => {
+  const windowStates = {...(appState.windowStates || {})};
+  windowStates[id] = windowState;
+  setState({windowStates});
+};
+
 
 
 const createWindow = (param, {width, height}) => {
@@ -175,14 +209,6 @@ ipcMain.on('image', (event, arg) => {
 
 
 
-let appState = {};
-const setState = state => {
-  appState = {...appState, ...state};
-
-  for (const window of windows) {
-    window.webContents.send('state', appState);
-  }
-};
 
 const taskNotification = ({description, task}) => {
   switch (task.type) {
@@ -248,11 +274,6 @@ const popTask = () => {
   taskNotification({description: 'Pop Task', task: oldTask});
 };
 
-const setWindowState = (id, windowState) => {
-  const windowStates = {...(appState.windowStates || {})};
-  windowStates[id] = windowState;
-  setState({windowStates});
-};
 
 
 
