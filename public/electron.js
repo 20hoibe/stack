@@ -127,7 +127,6 @@ ipcMain.on('push', (event, arg) => {
 });
 
 ipcMain.on('image', (event, arg) => {
-
   let image;
   if (arg === null || arg === undefined) {
     image = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);

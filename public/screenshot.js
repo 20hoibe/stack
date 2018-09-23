@@ -1,8 +1,10 @@
 const {
   ipcRenderer,
   desktopCapturer,
-  remote
+  remote,
+  screen
 } = window.require('electron');
+
 
 let mouseDown = false;
 let startPoint = {
@@ -18,6 +20,82 @@ let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
 const cls = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+const getDisplayBounds = (currentLocation) => {
+  const display = screen.getDisplayNearestPoint(currentLocation);
+  return display.bounds;
+};
+
+const getDesktopStream = (currentLocation) => {
+  return new Promise((resolve, reject) => {
+    const desktopBounds = getDisplayBounds(currentLocation);
+    desktopCapturer.getSources({
+      types: ['screen']
+    }, (error, sources) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      let screenId;
+      for (let i = 0; i < sources.length; ++i) {
+        if (sources[i].id.startsWith('screen')) {
+          screenId = sources[i].id;
+        }
+      }
+      if (!screenId) {
+        reject('Unable to determine screen');
+      }
+      navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: screenId,
+              maxWidth: desktopBounds.width,
+              maxHeight: desktopBounds.height,
+              minWidth: desktopBounds.width,
+              minHeight: desktopBounds.height
+            }
+          }
+        })
+        .then(stream => resolve(stream))
+        .catch(stream => reject(stream));;
+    });
+  });
+}
+
+const toVideo = (stream) => {
+  const videoElement = document.createElement("video");
+  videoElement.autoplay = true;
+  videoElement.srcObject = stream;
+  return new Promise(resolve => {
+    videoElement.addEventListener('playing', () => {
+      resolve(videoElement);
+    })
+  })
+}
+
+const takeScreenShot = (
+  x,
+  y,
+  width,
+  height
+) => {
+  return getDesktopStream({
+      x: x,
+      y: y
+    })
+    .then(stream => toVideo(stream))
+    .then(video => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, x, y, width, height, 0, 0, width, height);
+      return canvas.toDataURL();
+    });
+}
 
 window.onload = event => {
   canvas.width = window.innerWidth;
@@ -38,34 +116,15 @@ canvas.onmouseup = event => {
     endPoint.x = event.pageX;
     endPoint.y = event.pageY;
 
-    const captureX = (event.pageX < startPoint.x) ? event.pageX : startPoint.x;
-    const captureY = (event.pageY < startPoint.y) ? event.pageY : startPoint.y;
-    const captureWidth = Math.abs(event.pageX - startPoint.x);
-    const captureHeight = Math.abs(event.pageY - startPoint.y);
+    const roi = {
+      x: (event.pageX < startPoint.x) ? event.pageX : startPoint.x,
+      y: (event.pageY < startPoint.y) ? event.pageY : startPoint.y,
+      width: captureWidth = Math.abs(event.pageX - startPoint.x),
+      height: captureHeight = Math.abs(event.pageY - startPoint.y)
+    };
 
-    desktopCapturer.getSources({
-      types: ['screen']
-    }, (error, sources) => {
-      if (error) throw error
-      for (let i = 0; i < sources.length; ++i) {
-        if (sources[i].id.startsWith('screen')) {
-          let thumbnail = sources[i].thumbnail;
-          const rect = {
-            x: captureX + window.screenLeft,
-            y: captureY + window.screenTop,
-            width: captureWidth,
-            height: captureHeight
-          };
-          ipcRenderer.send('log', rect);
-          const result = thumbnail.crop(rect);
-          ipcRenderer.send('log', thumbnail.getSize());
-          ipcRenderer.send('image', thumbnail.toDataURL());
-        }
-      }
-    })
-    // setTimeout(() => {
-    //   canvas.style.cursor = "default";
-    // }, 300);
+    takeScreenShot(roi.x, roi.y, roi.width, roi.height)
+      .then(scrot => ipcRenderer.send('image', scrot));
   }
 }
 
