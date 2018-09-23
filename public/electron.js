@@ -267,7 +267,7 @@ const popTask = () => {
   }
 
   const tasks = [...(appState.tasks || [])];
-  const oldTask = tasks.pop();
+  const oldTask = tasks.shift();
   
   setState({tasks});
 
