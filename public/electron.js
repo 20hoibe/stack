@@ -148,18 +148,18 @@ const setState = state => {
   }
 };
 
-const taskNotification = task => {
+const taskNotification = ({description, task}) => {
   switch (task.type) {
     case 'text': {
       const notification = new Notification({
-        title: `Add Task "${task.payload}"`
+        title: `${description} "${task.payload}"`
       });
       notification.show();
       break;
     }
     case 'image': {
       const notification = new Notification({
-        title: 'Add Task',
+        title: description,
         icon: nativeImage.createFromDataURL(task.payload)
       });
 
@@ -167,7 +167,7 @@ const taskNotification = task => {
       break;
     }
     default: {
-      const notification = new Notification({title: 'added unknown task type'});
+      const notification = new Notification({title: `${description} unknown task type`});
       notification.show();
       break;
     }
@@ -178,10 +178,20 @@ const taskNotification = task => {
 // business use-cases
 const addTask = task => {
   const tasks = [...(appState.tasks || [])];
-  tasks.push(task);
+  tasks.unshift(task);
   setState({tasks});
 
-  taskNotification(task);
+  taskNotification({description: 'Add Task', task});
+};
+
+const deleteTask = index => {
+  const oldTask = appState.tasks[index];
+
+  const tasks = [...(appState.tasks || [])];
+  tasks.splice(index, 1);
+  setState({tasks});
+
+  taskNotification({description: 'Delete Task', task: oldTask});
 };
 
 const setWindowState = (id, windowState) => {
@@ -204,6 +214,10 @@ ipcMain.on('task', (event, arg) => {
   switch (arg.type) {
     case 'add': {
       addTask(arg.task);
+      break;
+    }
+    case 'delete': {
+      deleteTask(arg.index);
       break;
     }
     default: {

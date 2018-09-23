@@ -10,6 +10,13 @@ export const addTextTask = payload => {
   });
 };
 
+export const deleteTask = index => {
+  ipcRenderer.send('task', {
+    type: 'delete',
+    index
+  });
+};
+
 export const closeWindow = () => {
   remote.getCurrentWindow().close();
 };
