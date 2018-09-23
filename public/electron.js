@@ -14,22 +14,21 @@ const log = (origin, what) => {
 };
 
 
-let mainWindow;
 let screenshotWindow;
 
 const createWindow = (param, {width, height}) => {
-  mainWindow = new BrowserWindow({width, height, show: false});
-  mainWindow.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
-  mainWindow.on('closed', () => mainWindow = null);
+  const window = new BrowserWindow({width, height, show: false});
+  window.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
 
   // postpone show window, until loaded
-  mainWindow.webContents.once('dom-ready', () => {
-    mainWindow.show();
-    mainWindow.focus();
+  window.webContents.once('dom-ready', () => {
+    window.show();
+    window.focus();
   });
 
-  const {id} = mainWindow;
+  const {id} = window;
   setWindowState(id, param);
+  return window;
 };
 
 
@@ -37,8 +36,13 @@ const createCreateTaskWindow = () => {
   createWindow({type: 'create-task'}, {width: 480, height: 120});
 };
 
-const createListTaskWindow = () => {
-  createWindow({type: 'list-task'}, {width: 640, height: 1024});
+let listWindow;
+const toggleListTaskWindow = () => {
+  if (!listWindow || listWindow.isDestroyed()) {
+    listWindow = createWindow({type: 'list-task'}, {width: 640, height: 1024});
+  } else {
+    listWindow.close();
+  }
 };
 
 const createScreenshotWindow = () => {
@@ -62,7 +66,7 @@ app.on('ready', () => {
       createCreateTaskWindow();
     }},
     {label: 'Show List', type: 'normal', click: () => {
-      createListTaskWindow();
+      toggleListTaskWindow();
     }},
     {label: 'Quit', type: 'normal', click: () => {
       app.quit();
@@ -83,7 +87,7 @@ app.on('ready', () => {
   });
 
   globalShortcut.register('CommandOrControl+Shift+L', () => {
-    createListTaskWindow();
+    toggleListTaskWindow();
   });
 });
 
@@ -94,7 +98,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) {
+  if (window === null) {
     // createWindow('test2');
   }
 });
