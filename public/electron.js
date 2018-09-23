@@ -1,5 +1,6 @@
 const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
+const isMac = process.platform === 'darwin';
 
 const logMain = what => {
   log('electron', what);
@@ -13,8 +14,6 @@ const log = (origin, what) => {
   console.log(origin, what);
 };
 
-
-let screenshotWindow;
 
 const createWindow = (param, {width, height}) => {
   const window = new BrowserWindow({width, height, show: false});
@@ -38,23 +37,43 @@ const createCreateTaskWindow = () => {
 
 let listWindow;
 const toggleListTaskWindow = () => {
-  if (!listWindow || listWindow.isDestroyed()) {
-    listWindow = createWindow({type: 'list-task'}, {width: 640, height: 1024});
-  } else {
+  if (listWindow && !listWindow.isDestroyed()) {
     listWindow.close();
+    listWindow = null;
+    return;
   }
+
+  listWindow = createWindow({type: 'list-task'}, {width: 640, height: 1024});
 };
 
-const createScreenshotWindow = () => {
-  let screenshot = new BrowserWindow({
+let screenshotWindow;
+const toggleScreenshotWindow = () => {
+
+  if (screenshotWindow && !screenshotWindow.isDestroyed()) {
+    screenshotWindow.close();
+    screenshotWindow = null;
+    return;
+  }
+
+  screenshotWindow = new BrowserWindow({
     frame: false,
     transparent: true
   });
-  screenshot.maximize();
-  screenshot.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${path.join(__dirname, '../build/screenshot.html')}`);
-  screenshot.on('close', () => screenshotWindow = null);
-  screenshot.show();
-  return screenshot;
+  screenshotWindow.maximize();
+  screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${path.join(__dirname, '../build/screenshot.html')}`);
+  screenshotWindow.on('close', () => screenshotWindow = null);
+  screenshotWindow.show();
+  return screenshotWindow;
+};
+
+const notifyCurrentTask = () => {
+  if (!appState || !appState.tasks || appState.tasks.length === 0) {
+    const notification = new Notification({title: `Stack is empty`});
+    notification.show();
+    return
+  }
+
+  taskNotification({description: 'Currently working on', task: appState.tasks[0]});
 };
 
 let tray;
@@ -62,11 +81,20 @@ app.on('ready', () => {
   
   tray = new Tray(__dirname + '/assets/tray.png');
   const menu = Menu.buildFromTemplate([
-    {label: `Create Task\t${process.platform !== 'darwin' ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
+    {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
     }},
-    {label: 'Show List', type: 'normal', click: () => {
+    {label: `Create Screenshot\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
+      toggleScreenshotWindow();
+    }},
+    {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {
+      notifyCurrentTask();
+    }},
+    {label: `Show List\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+L`, type: 'normal', click: () => {
       toggleListTaskWindow();
+    }},
+    {label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`, type: 'normal', click: () => {
+      popTask();
     }},
     {label: 'Quit', type: 'normal', click: () => {
       app.quit();
@@ -83,7 +111,7 @@ app.on('ready', () => {
   });
 
   globalShortcut.register('CommandOrControl+Shift+K', () => {
-    screenshotWindow = createScreenshotWindow();
+    toggleScreenshotWindow();
   });
 
   globalShortcut.register('CommandOrControl+Shift+L', () => {
@@ -93,13 +121,14 @@ app.on('ready', () => {
   globalShortcut.register('CommandOrControl+Shift+U', () => {
     popTask();
   });
+
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    notifyCurrentTask();
+  });
 });
 
-app.on('window-all-closed', () => {
-  // if (process.platform !== 'darwin') {
-  //   app.quit();
-  // }
-});
+// 
+app.on('window-all-closed', () => {});
 
 app.on('activate', () => {
   if (window === null) {
@@ -119,7 +148,7 @@ app.on('browser-window-created', (event, window) => {
 
 ipcMain.on('push', (event, arg) => {
   if (!screenshotWindow) {
-    screenshotWindow = createScreenshotWindow();
+    screenshotWindow = toggleScreenshotWindow();
     console.log({
       arg
     });
@@ -204,7 +233,7 @@ const deleteTask = index => {
 const popTask = () => {
   if (!appState || !appState.tasks || appState.tasks.length === 0) {
     const notification = new Notification({
-      title: 'Cannot pop task from emtpy task list'
+      title: 'Cannot pop from empty stack'
     });
 
     notification.show();
