@@ -246,6 +246,7 @@ const taskNotification = ({description, task}) => {
 const swap = (elements, first, second) => {
   if (first < 0 || second < 0 || first >= elements.length || second >= elements.length) {
     console.error(`Out of bounds! Length: ${elements.length} Indices: ${first}, ${second}`);
+    return;
   }
 
   const tmp = elements[first];
