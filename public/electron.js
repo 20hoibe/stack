@@ -259,7 +259,7 @@ const swap = (elements, first, second) => {
 const addTask = task => {
   const tasks = [...(appState.tasks || [])];
   tasks.unshift(task);
-  setState({tasks, postponedTasks: 0});
+  setState({tasks});
 
   taskNotification({description: 'Add Task', task});
 };
@@ -272,23 +272,18 @@ const postponeTask = () => {
     });
   } else if (appState.tasks.length === 1) {
     notification = new Notification({
-      title: 'Just one more thing before you can take the day of! Hang in there!'
+      title: 'Just one more thing before you can take the day off! Hang in there!'
     });
   }
   if (notification) {
     notification.show();
-    setState({postponedTasks: 0});
     return;
   }
 
   let tasks = [...(appState.tasks || [])]
-  let postponedTasks = appState.postponedTasks || 0;
-  if (postponedTasks > 0) {
-    swap(tasks, 0, postponedTasks);
-  }
-  (postponedTasks + 1) >= tasks.length ? postponedTasks = 0 : ++postponedTasks;
-  swap(tasks, 0, postponedTasks);
-  setState({tasks, postponedTasks});
+  tasks.push(tasks.shift());
+  setState({tasks});
+  notifyCurrentTask();
 }
 
 const deleteTask = index => {
@@ -314,7 +309,7 @@ const popTask = () => {
   const tasks = [...(appState.tasks || [])];
   const oldTask = tasks.shift();
 
-  setState({tasks, postponedTasks: 0});
+  setState({tasks});
 
   taskNotification({description: 'Pop Task', task: oldTask});
 };
