@@ -287,9 +287,7 @@ const postponeTask = () => {
   }
   (postponedTasks + 1) >= tasks.length ? postponedTasks = 0 : ++postponedTasks;
   swap(tasks, 0, postponedTasks);
-  logMain(appState);
   setState({tasks, postponedTasks});
-  logMain(appState);
 }
 
 const deleteTask = index => {
