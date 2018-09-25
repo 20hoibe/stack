@@ -10,7 +10,19 @@ export default connect()(class CreateTask extends React.Component {
     if (this.textRef.current) {
       this.textRef.current.focus();
     }
+
+    document.addEventListener('keydown', this.handleKeyDown);
   }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyDown);
+  }
+
+  handleKeyDown = event => {
+    if (event.key === 'Escape') {
+      ipc.closeWindow();
+    }
+  };
 
   handleSubmit = event => {
     event.preventDefault();
