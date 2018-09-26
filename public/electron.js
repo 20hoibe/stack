@@ -130,6 +130,9 @@ app.on('ready', () => {
     {label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`, type: 'normal', click: () => {
       popTask();
     }},
+    {label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`, type: 'normal', click: () => {
+      postponeTask();
+    }},
     {label: 'Quit', type: 'normal', click: () => {
       app.quit();
     }}
@@ -159,6 +162,10 @@ app.on('ready', () => {
   globalShortcut.register('CommandOrControl+Shift+I', () => {
     notifyCurrentTask();
   });
+
+  globalShortcut.register('CommandOrControl+Shift+P', () => {
+    postponeTask();
+  })
 });
 
 //
@@ -236,6 +243,17 @@ const taskNotification = ({description, task}) => {
   }
 };
 
+const swap = (elements, first, second) => {
+  if (first < 0 || second < 0 || first >= elements.length || second >= elements.length) {
+    console.error(`Out of bounds! Length: ${elements.length} Indices: ${first}, ${second}`);
+    return;
+  }
+
+  const tmp = elements[first];
+  elements[first] = elements[second];
+  elements[second] = tmp;
+};
+
 
 // business use-cases
 const addTask = task => {
@@ -245,6 +263,28 @@ const addTask = task => {
 
   taskNotification({description: 'Add Task', task});
 };
+
+const postponeTask = () => {
+  let notification;
+  if (!appState || !appState.tasks || appState.tasks.length === 0) {
+    notification = new Notification({
+      title: 'Nothing to postpone, feel free to take a walk!'
+    });
+  } else if (appState.tasks.length === 1) {
+    notification = new Notification({
+      title: 'Just one more thing before you can take the day off! Hang in there!'
+    });
+  }
+  if (notification) {
+    notification.show();
+    return;
+  }
+
+  let tasks = [...(appState.tasks || [])]
+  tasks.push(tasks.shift());
+  setState({tasks});
+  notifyCurrentTask();
+}
 
 const deleteTask = index => {
   const oldTask = appState.tasks[index];
