@@ -1,7 +1,18 @@
 const fs = require('fs');
-const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
+const {
+  app,
+  ipcMain,
+  BrowserWindow,
+  globalShortcut,
+  Notification,
+  Tray,
+  Menu,
+  nativeImage
+} = require('electron');
 const isDev = require('electron-is-dev');
 const isMac = process.platform === 'darwin';
+
+let electronScreen;
 
 const logMain = what => {
   log('electron', what);
@@ -21,14 +32,18 @@ logMain(`using state file: ${stateFilePath}`);
 
 let appState;
 try {
-  const appStateString = fs.readFileSync(stateFilePath, {flag: 'r'});
+  const appStateString = fs.readFileSync(stateFilePath, {
+    flag: 'r'
+  });
   appState = JSON.parse(appStateString);
 } catch (e) {
   appState = {};
 }
 
 const setState = state => {
-  appState = {...appState, ...state};
+  appState = { ...appState,
+    ...state
+  };
 
   try {
     fs.writeFileSync(stateFilePath, JSON.stringify(appState));
@@ -42,15 +57,25 @@ const setState = state => {
 };
 
 const setWindowState = (id, windowState) => {
-  const windowStates = {...(appState.windowStates || {})};
+  const windowStates = { ...(appState.windowStates || {})
+  };
   windowStates[id] = windowState;
-  setState({windowStates});
+  setState({
+    windowStates
+  });
 };
 
 
 
-const createWindow = (param, {width, height}) => {
-  const window = new BrowserWindow({width, height, show: false});
+const createWindow = (param, {
+  width,
+  height
+}) => {
+  const window = new BrowserWindow({
+    width,
+    height,
+    show: false
+  });
   window.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
 
   // postpone show window, until loaded
@@ -59,14 +84,21 @@ const createWindow = (param, {width, height}) => {
     window.focus();
   });
 
-  const {id} = window;
+  const {
+    id
+  } = window;
   setWindowState(id, param);
   return window;
 };
 
 
 const createCreateTaskWindow = () => {
-  createWindow({type: 'create-task'}, {width: 480, height: 120});
+  createWindow({
+    type: 'create-task'
+  }, {
+    width: 480,
+    height: 120
+  });
 };
 
 let listWindow;
@@ -77,65 +109,118 @@ const toggleListTaskWindow = () => {
     return;
   }
 
-  listWindow = createWindow({type: 'list-task'}, {width: 640, height: 1024});
+  listWindow = createWindow({
+    type: 'list-task'
+  }, {
+    width: 640,
+    height: 1024
+  });
 };
 
-let screenshotWindow;
+let screenshotWindows = [];
 const toggleScreenshotWindow = () => {
-
-  if (screenshotWindow && !screenshotWindow.isDestroyed()) {
-    screenshotWindow.close();
-    screenshotWindow = null;
+  let hideWindows = false;
+  screenshotWindows
+    .filter(window => window && !window.isDestroyed())
+    .map(window => {
+      window.close();
+      hideWindows = true;
+    });
+  if (hideWindows) {
+    screenshotWindows.length = 0;
     return;
   }
 
-  screenshotWindow = new BrowserWindow({
-    frame: false,
-    transparent: true
-  });
-  screenshotWindow.maximize();
-  screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
-  screenshotWindow.on('close', () => screenshotWindow = null);
-  screenshotWindow.show();
-  return screenshotWindow;
+  const availableDispays = electronScreen.getAllDisplays();
+
+  for (let idx = 0; idx < availableDispays.length; ++idx) {
+    const dsp = availableDispays[idx];
+    let screenshotWindow = new BrowserWindow({
+      frame: false,
+      transparent: true,
+      x: dsp.workArea.x,
+      y: dsp.workArea.y,
+      width: dsp.bounds.width,
+      height: dsp.bounds.height
+    });
+    screenshotWindow.maximize();
+    screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
+    screenshotWindow.on('close', () => screenshotWindow = null);
+    screenshotWindow.show();
+    screenshotWindows.push(screenshotWindow);
+  }
 };
 
 const notifyCurrentTask = () => {
   if (!appState || !appState.tasks || appState.tasks.length === 0) {
-    const notification = new Notification({title: `Stack is empty`});
+    const notification = new Notification({
+      title: `Stack is empty`
+    });
     notification.show();
     return
   }
 
-  taskNotification({description: 'Currently working on', task: appState.tasks[0]});
+  taskNotification({
+    description: 'Currently working on',
+    task: appState.tasks[0]
+  });
 };
 
 let tray;
 app.on('ready', () => {
 
+  electronScreen = require('electron').screen;
+
   tray = new Tray(__dirname + '/assets/tray.png');
-  const menu = Menu.buildFromTemplate([
-    {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
-      createCreateTaskWindow();
-    }},
-    {label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
-      toggleScreenshotWindow();
-    }},
-    {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {
-      notifyCurrentTask();
-    }},
-    {label: `Show List\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+L`, type: 'normal', click: () => {
-      toggleListTaskWindow();
-    }},
-    {label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`, type: 'normal', click: () => {
-      popTask();
-    }},
-    {label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`, type: 'normal', click: () => {
-      postponeTask();
-    }},
-    {label: 'Quit', type: 'normal', click: () => {
-      app.quit();
-    }}
+  const menu = Menu.buildFromTemplate([{
+      label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`,
+      type: 'normal',
+      click: () => {
+        createCreateTaskWindow();
+      }
+    },
+    {
+      label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`,
+      type: 'normal',
+      click: () => {
+        toggleScreenshotWindow();
+      }
+    },
+    {
+      label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`,
+      type: 'normal',
+      click: () => {
+        notifyCurrentTask();
+      }
+    },
+    {
+      label: `Show List\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+L`,
+      type: 'normal',
+      click: () => {
+        toggleListTaskWindow();
+      }
+    },
+    {
+      label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`,
+      type: 'normal',
+      click: () => {
+        popTask();
+      }
+    },
+    {
+      label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`,
+      type: 'normal',
+      click: () => {
+        postponeTask();
+      }
+    },
+    {
+      label: 'Quit',
+      type: 'normal',
+      click: () => {
+        app.quit();
+      }
+    }
   ]);
   tray.setTitle('Stack');
   tray.setToolTip('Stack');
@@ -187,15 +272,6 @@ app.on('browser-window-created', (event, window) => {
   });
 });
 
-ipcMain.on('push', (event, arg) => {
-  if (!screenshotWindow) {
-    screenshotWindow = toggleScreenshotWindow();
-    console.log({
-      arg
-    });
-  }
-});
-
 ipcMain.on('image', (event, arg) => {
   let image;
   if (arg === null || arg === undefined) {
@@ -209,49 +285,46 @@ ipcMain.on('image', (event, arg) => {
     payload: image
   });
 
-  if (screenshotWindow) {
-    screenshotWindow.close();
-  }
+  screenshotWindows
+    .filter(window => window && !window.isDestroyed())
+    .map(window => window.close());
 });
 
 
 
 
-const taskNotification = ({description, task}) => {
+const taskNotification = ({
+  description,
+  task
+}) => {
   switch (task.type) {
-    case 'text': {
-      const notification = new Notification({
-        title: `${description} "${task.payload}"`
-      });
-      notification.show();
-      break;
-    }
-    case 'image': {
-      const notification = new Notification({
-        title: description,
-        icon: nativeImage.createFromDataURL(task.payload)
-      });
+    case 'text':
+      {
+        const notification = new Notification({
+          title: `${description} "${task.payload}"`
+        });
+        notification.show();
+        break;
+      }
+    case 'image':
+      {
+        const notification = new Notification({
+          title: description,
+          icon: nativeImage.createFromDataURL(task.payload)
+        });
 
-      notification.show();
-      break;
-    }
-    default: {
-      const notification = new Notification({title: `${description} unknown task type`});
-      notification.show();
-      break;
-    }
+        notification.show();
+        break;
+      }
+    default:
+      {
+        const notification = new Notification({
+          title: `${description} unknown task type`
+        });
+        notification.show();
+        break;
+      }
   }
-};
-
-const swap = (elements, first, second) => {
-  if (first < 0 || second < 0 || first >= elements.length || second >= elements.length) {
-    console.error(`Out of bounds! Length: ${elements.length} Indices: ${first}, ${second}`);
-    return;
-  }
-
-  const tmp = elements[first];
-  elements[first] = elements[second];
-  elements[second] = tmp;
 };
 
 
@@ -259,9 +332,14 @@ const swap = (elements, first, second) => {
 const addTask = task => {
   const tasks = [...(appState.tasks || [])];
   tasks.unshift(task);
-  setState({tasks});
+  setState({
+    tasks
+  });
 
-  taskNotification({description: 'Add Task', task});
+  taskNotification({
+    description: 'Add Task',
+    task
+  });
 };
 
 const postponeTask = () => {
@@ -282,7 +360,9 @@ const postponeTask = () => {
 
   let tasks = [...(appState.tasks || [])]
   tasks.push(tasks.shift());
-  setState({tasks});
+  setState({
+    tasks
+  });
   notifyCurrentTask();
 }
 
@@ -291,9 +371,14 @@ const deleteTask = index => {
 
   const tasks = [...(appState.tasks || [])];
   tasks.splice(index, 1);
-  setState({tasks});
+  setState({
+    tasks
+  });
 
-  taskNotification({description: 'Delete Task', task: oldTask});
+  taskNotification({
+    description: 'Delete Task',
+    task: oldTask
+  });
 };
 
 const popTask = () => {
@@ -309,9 +394,14 @@ const popTask = () => {
   const tasks = [...(appState.tasks || [])];
   const oldTask = tasks.shift();
 
-  setState({tasks});
+  setState({
+    tasks
+  });
 
-  taskNotification({description: 'Pop Task', task: oldTask});
+  taskNotification({
+    description: 'Pop Task',
+    task: oldTask
+  });
 };
 
 
@@ -327,18 +417,24 @@ ipcMain.on('request-state', event => {
 // task channel
 ipcMain.on('task', (event, arg) => {
   switch (arg.type) {
-    case 'add': {
-      addTask(arg.task);
-      break;
-    }
-    case 'delete': {
-      deleteTask(arg.index);
-      break;
-    }
-    default: {
-      logMain({event, arg});
-      console.warn('wot?');
-    }
+    case 'add':
+      {
+        addTask(arg.task);
+        break;
+      }
+    case 'delete':
+      {
+        deleteTask(arg.index);
+        break;
+      }
+    default:
+      {
+        logMain({
+          event,
+          arg
+        });
+        console.warn('wot?');
+      }
   }
 });
 
@@ -349,4 +445,3 @@ ipcMain.on('task', (event, arg) => {
 ipcMain.on('log', (event, arg) => {
   logRenderer(arg);
 });
-
