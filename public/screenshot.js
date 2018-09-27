@@ -21,14 +21,13 @@ let ctx = canvas.getContext("2d");
 
 const cls = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-const getDisplayBounds = (currentLocation) => {
+const getDisplay = (currentLocation) => {
   const display = screen.getDisplayNearestPoint(currentLocation);
-  return display.bounds;
+  return display;
 };
 
-const getDesktopStream = (currentLocation) => {
+const getDesktopStream = (desktop) => {
   return new Promise((resolve, reject) => {
-    const desktopBounds = getDisplayBounds(currentLocation);
     desktopCapturer.getSources({
       types: ['screen']
     }, (error, sources) => {
@@ -39,8 +38,9 @@ const getDesktopStream = (currentLocation) => {
 
       let screenId;
       for (let i = 0; i < sources.length; ++i) {
-        if (sources[i].id.startsWith('screen')) {
+        if (sources[i].id === (`screen:${desktop.id}`)) {
           screenId = sources[i].id;
+          break;
         }
       }
       if (!screenId) {
@@ -51,16 +51,12 @@ const getDesktopStream = (currentLocation) => {
           video: {
             mandatory: {
               chromeMediaSource: 'desktop',
-              chromeMediaSourceId: screenId,
-              maxWidth: desktopBounds.width,
-              maxHeight: desktopBounds.height,
-              minWidth: desktopBounds.width,
-              minHeight: desktopBounds.height
+              chromeMediaSourceId: screenId
             }
           }
         })
         .then(stream => resolve(stream))
-        .catch(stream => reject(stream));;
+        .catch(() => reject("Unable to get stream"));
     });
   });
 }
@@ -82,17 +78,18 @@ const takeScreenShot = (
   width,
   height
 ) => {
-  return getDesktopStream({
+  const desktop = getDisplay({
       x: x,
       y: y
-    })
+  });
+  return getDesktopStream(desktop)
     .then(stream => toVideo(stream))
     .then(video => {
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, x, y, width, height, 0, 0, width, height);
+      ctx.drawImage(video, x - desktop.bounds.x, y - desktop.bounds.y, width, height, 0, 0, width, height);
       return canvas.toDataURL();
     });
 }
@@ -105,22 +102,22 @@ window.onload = event => {
 
 canvas.onmousedown = event => {
   mouseDown = true;
-  startPoint.x = event.pageX;
-  startPoint.y = event.pageY;
+  startPoint.x = event.pageX + window.screenX;
+  startPoint.y = event.pageY + window.screenY;
   canvas.style.cursor = "crosshair";
 };
 
 canvas.onmouseup = event => {
   if (mouseDown) {
     mouseDown = false;
-    endPoint.x = event.pageX;
-    endPoint.y = event.pageY;
+    endPoint.x = event.pageX + window.screenX;
+    endPoint.y = event.pageY + window.screenY;
 
     const roi = {
-      x: (event.pageX < startPoint.x) ? event.pageX : startPoint.x,
-      y: (event.pageY < startPoint.y) ? event.pageY : startPoint.y,
-      width: captureWidth = Math.abs(event.pageX - startPoint.x),
-      height: captureHeight = Math.abs(event.pageY - startPoint.y)
+      x: (endPoint.x < startPoint.x) ? endPoint.x: startPoint.x,
+      y: (endPoint.y < startPoint.y) ? endPoint.y : startPoint.y,
+      width: captureWidth = Math.abs(endPoint.x - startPoint.x),
+      height: captureHeight = Math.abs(endPoint.y - startPoint.y)
     };
 
     cls();
@@ -132,12 +129,16 @@ canvas.onmouseup = event => {
 
 canvas.onmousemove = event => {
   if (mouseDown) {
+    const relativeStart = {
+      x: startPoint.x - window.screenX,
+      y: startPoint.y - window.screenY
+    };
     cls();
     ctx.fillRect(
-      startPoint.x,
-      startPoint.y,
-      event.pageX - startPoint.x,
-      event.pageY - startPoint.y
+      relativeStart.x,
+      relativeStart.y,
+      event.pageX - relativeStart.x,
+      event.pageY - relativeStart.y
     );
   }
 }
