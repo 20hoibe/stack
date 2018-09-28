@@ -1,3 +1,16 @@
 body {
   margin: 10px;
 }
+
+ul {
+  overflow-x: hidden;
+}
+
+li {
+  transition: transform 300ms ease-out, opacity 300ms ease-out, height 500ms ease-in;
+}
+
+li.fade-out {
+  transform: translate(100%, 0);
+  opacity: 0;
+}

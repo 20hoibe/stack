@@ -1,6 +1,7 @@
 const fs = require('fs');
 const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
+const uuid = require('uuid');
 const isMac = process.platform === 'darwin';
 
 const logMain = what => {
@@ -77,7 +78,7 @@ const toggleListTaskWindow = () => {
     return;
   }
 
-  listWindow = createWindow({type: 'list-task'}, {width: 640, height: 1024});
+  listWindow = createWindow({type: 'list-task'}, {width: 640, height: 640});
 };
 
 let screenshotWindow;
@@ -168,7 +169,7 @@ app.on('ready', () => {
   })
 });
 
-//
+// don't remove listener to prevent app quit
 app.on('window-all-closed', () => {});
 
 app.on('activate', () => {
@@ -198,7 +199,7 @@ ipcMain.on('push', (event, arg) => {
 
 ipcMain.on('image', (event, arg) => {
   let image;
-  if (arg === null || arg === undefined) {
+  if (!arg) {
     image = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);
   } else {
     image = arg;
@@ -258,6 +259,8 @@ const swap = (elements, first, second) => {
 // business use-cases
 const addTask = task => {
   const tasks = [...(appState.tasks || [])];
+
+  task = {...task, id: uuid.v4()};
   tasks.unshift(task);
   setState({tasks});
 

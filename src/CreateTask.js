@@ -39,16 +39,15 @@ export default connect()(class CreateTask extends React.Component {
   render() {
     return (
       <div className="container">
-        <div className="row">
-          <div className="col-sm">
-            <form onSubmit={this.handleSubmit}>
-              <div className="form-group">
-                <input ref={this.textRef} type="text" className="form-control" placeholder="wot?" />
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </form>
+        <h5>Add Task</h5>
+        <form onSubmit={this.handleSubmit}>
+          <div className="input-group">
+            <input ref={this.textRef} type="text" className="form-control" placeholder="wot?" />
+            <div class="input-group-append">
+              <button type="submit" class="btn btn-primary btn-outline-secondary">Save</button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     );
   }
