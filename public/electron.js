@@ -3,6 +3,7 @@ const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, na
 const isDev = require('electron-is-dev');
 const uuid = require('uuid');
 const isMac = process.platform === 'darwin';
+let screen; // lazy loaded
 
 const logMain = what => {
   log('electron', what);
@@ -81,24 +82,43 @@ const toggleListTaskWindow = () => {
   listWindow = createWindow({type: 'list-task'}, {width: 640, height: 640});
 };
 
-let screenshotWindow;
-const toggleScreenshotWindow = () => {
+let screenshotWindows = undefined;
 
-  if (screenshotWindow && !screenshotWindow.isDestroyed()) {
-    screenshotWindow.close();
-    screenshotWindow = null;
+const closeScreenshotWindows = () => {
+  if (!screenshotWindows) {
     return;
   }
 
-  screenshotWindow = new BrowserWindow({
-    frame: false,
-    transparent: true
-  });
-  screenshotWindow.maximize();
-  screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
-  screenshotWindow.on('close', () => screenshotWindow = null);
-  screenshotWindow.show();
-  return screenshotWindow;
+  for (const screenshotWindow of screenshotWindows) {
+    screenshotWindow.close();
+  }
+
+  screenshotWindows = undefined;
+};
+
+const toggleScreenshot = () => {
+  if (screenshotWindows) {
+    closeScreenshotWindows();
+    return;
+  }
+
+  screenshotWindows = [];
+
+  for (const display of screen.getAllDisplays()) {
+    const screenshotWindow = new BrowserWindow({
+      frame: false,
+      transparent: true,
+      x: display.workArea.x,
+      y: display.workArea.y,
+      width: display.bounds.width,
+      height: display.bounds.height
+    });
+
+    screenshotWindow.maximize();
+    screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
+    screenshotWindow.show();
+    screenshotWindows.push(screenshotWindow);
+  }
 };
 
 const notifyCurrentTask = () => {
@@ -114,13 +134,15 @@ const notifyCurrentTask = () => {
 let tray;
 app.on('ready', () => {
 
+  screen = require('electron').screen;
+
   tray = new Tray(__dirname + '/assets/tray.png');
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
     }},
     {label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
-      toggleScreenshotWindow();
+      toggleScreenshot();
     }},
     {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {
       notifyCurrentTask();
@@ -149,7 +171,7 @@ app.on('ready', () => {
   });
 
   globalShortcut.register('CommandOrControl+Shift+K', () => {
-    toggleScreenshotWindow();
+    toggleScreenshot();
   });
 
   globalShortcut.register('CommandOrControl+Shift+L', () => {
@@ -172,11 +194,7 @@ app.on('ready', () => {
 // don't remove listener to prevent app quit
 app.on('window-all-closed', () => {});
 
-app.on('activate', () => {
-  if (window === null) {
-    // createWindow('test2');
-  }
-});
+app.on('activate', () => {});
 
 const windows = new Set();
 
@@ -186,33 +204,6 @@ app.on('browser-window-created', (event, window) => {
   window.once('close', () => {
     windows.delete(window);
   });
-});
-
-ipcMain.on('push', (event, arg) => {
-  if (!screenshotWindow) {
-    screenshotWindow = toggleScreenshotWindow();
-    console.log({
-      arg
-    });
-  }
-});
-
-ipcMain.on('image', (event, arg) => {
-  let image;
-  if (!arg) {
-    image = nativeImage.createFromPath(`${__dirname}/assets/placeholder.png`);
-  } else {
-    image = arg;
-  }
-
-  addTask({
-    type: 'image',
-    payload: image
-  });
-
-  if (screenshotWindow) {
-    screenshotWindow.close();
-  }
 });
 
 
@@ -243,18 +234,6 @@ const taskNotification = ({description, task}) => {
     }
   }
 };
-
-const swap = (elements, first, second) => {
-  if (first < 0 || second < 0 || first >= elements.length || second >= elements.length) {
-    console.error(`Out of bounds! Length: ${elements.length} Indices: ${first}, ${second}`);
-    return;
-  }
-
-  const tmp = elements[first];
-  elements[first] = elements[second];
-  elements[second] = tmp;
-};
-
 
 // business use-cases
 const addTask = task => {
@@ -323,6 +302,18 @@ const popTask = () => {
 // for initial state, sync event
 ipcMain.on('request-state', event => {
   event.returnValue = appState;
+});
+
+
+
+// channel for simple async commands
+ipcMain.on('command', (event, arg) => {
+  switch (arg) {
+    case 'close-screenshot-windows': {
+      closeScreenshotWindows();
+      break;
+    }
+  }
 });
 
 
