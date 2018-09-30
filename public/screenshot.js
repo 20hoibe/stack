@@ -1,143 +1,154 @@
-const {
-  ipcRenderer,
-  desktopCapturer,
-  remote,
-  screen
-} = window.require('electron');
-
+const {ipcRenderer, screen} = window.require('electron');
 
 let mouseDown = false;
-let startPoint = {
-  x: 0,
-  y: 0
-};
-let endPoint = {
-  x: 0,
-  y: 0
-};
+const startPoint = {x: 0, y: 0};
 
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-const cls = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+const clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-const getDisplayBounds = (currentLocation) => {
-  const display = screen.getDisplayNearestPoint(currentLocation);
-  return display.bounds;
-};
+const shortWait = async () => await new Promise(resolve => setTimeout(resolve, 50));
 
-const getDesktopStream = (currentLocation) => {
-  return new Promise((resolve, reject) => {
-    const desktopBounds = getDisplayBounds(currentLocation);
-    desktopCapturer.getSources({
-      types: ['screen']
-    }, (error, sources) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+/**
+ * `navigator.mediaDevices.getUserMedia` promisified
+ */
+const getDesktopStream = async () => {
 
-      let screenId;
-      for (let i = 0; i < sources.length; ++i) {
-        if (sources[i].id.startsWith('screen')) {
-          screenId = sources[i].id;
+  let mediaStream;
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        mandatory: {
+          chromeMediaSource: 'screen'
         }
       }
-      if (!screenId) {
-        reject('Unable to determine screen');
-      }
-      navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            mandatory: {
-              chromeMediaSource: 'desktop',
-              chromeMediaSourceId: screenId,
-              maxWidth: desktopBounds.width,
-              maxHeight: desktopBounds.height,
-              minWidth: desktopBounds.width,
-              minHeight: desktopBounds.height
-            }
-          }
-        })
-        .then(stream => resolve(stream))
-        .catch(stream => reject(stream));;
     });
-  });
-}
+  } catch (e) {
+    throw new Error(`Unable to get desktop stream ${sourceId}`)
+  }
 
-const toVideo = (stream) => {
-  const videoElement = document.createElement("video");
-  videoElement.autoplay = true;
-  videoElement.srcObject = stream;
-  return new Promise(resolve => {
-    videoElement.addEventListener('playing', () => {
-      resolve(videoElement);
-    })
-  })
-}
-
-const takeScreenShot = (
-  x,
-  y,
-  width,
-  height
-) => {
-  return getDesktopStream({
-      x: x,
-      y: y
-    })
-    .then(stream => toVideo(stream))
-    .then(video => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, x, y, width, height, 0, 0, width, height);
-      return canvas.toDataURL();
-    });
-}
-
-window.onload = event => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-}
-
-canvas.onmousedown = event => {
-  mouseDown = true;
-  startPoint.x = event.pageX;
-  startPoint.y = event.pageY;
-  canvas.style.cursor = "crosshair";
+  return mediaStream;
 };
 
-canvas.onmouseup = event => {
-  if (mouseDown) {
-    mouseDown = false;
-    endPoint.x = event.pageX;
-    endPoint.y = event.pageY;
+/**
+ * Virtual screen boundary including all displays.
+ */
+const getVirtualScreenBound = () => {
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
 
-    const roi = {
-      x: (event.pageX < startPoint.x) ? event.pageX : startPoint.x,
-      y: (event.pageY < startPoint.y) ? event.pageY : startPoint.y,
-      width: captureWidth = Math.abs(event.pageX - startPoint.x),
-      height: captureHeight = Math.abs(event.pageY - startPoint.y)
-    };
-
-    cls();
-
-    takeScreenShot(roi.x, roi.y, roi.width, roi.height)
-      .then(scrot => ipcRenderer.send('image', scrot));
+  for (const display of screen.getAllDisplays()) {
+    maxX = Math.max(maxX, display.bounds.x + display.bounds.width);
+    maxY = Math.max(maxY, display.bounds.y + display.bounds.height);
+    minX = Math.min(minX, display.bounds.x);
+    minY = Math.min(minY, display.bounds.y);
   }
-}
+  
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY
+  };
+};
 
-canvas.onmousemove = event => {
-  if (mouseDown) {
-    cls();
-    ctx.fillRect(
-      startPoint.x,
-      startPoint.y,
-      event.pageX - startPoint.x,
-      event.pageY - startPoint.y
-    );
+/**
+ * Takes a screenshot with all params being screen coords, returning a image/png data URL string.
+ */
+const takeScreenshot = async ({x, y, width, height}) => {
+  clearCanvas();
+  canvas.style.cursor = 'none';
+  await shortWait(); 
+
+  const stream = await getDesktopStream();
+
+  const videoElem = document.createElement('video');
+  videoElem.autoplay = true;
+  videoElem.srcObject = stream;
+
+  await new Promise((resolve) => {
+    videoElem.addEventListener('loadedmetadata', () => {
+      resolve();
+    });
+  });
+
+  const virtualScreenBound = getVirtualScreenBound();
+  const videoPixelsPerScreenPixelX = videoElem.videoWidth / virtualScreenBound.width;
+  const videoPixelsPerScreenPixelY = videoElem.videoHeight / virtualScreenBound.height;
+
+  const canvasElem = document.createElement('canvas');
+  canvasElem.width = width;
+  canvasElem.height = height;
+
+  // x or y can be negative (e.g. darwin external display left to primary display)
+  const srcX = (x - virtualScreenBound.x) * videoPixelsPerScreenPixelX;
+  const srcY = (y - virtualScreenBound.y) * videoPixelsPerScreenPixelY;
+  const srcW = width * videoPixelsPerScreenPixelX;
+  const srcH = height * videoPixelsPerScreenPixelY;
+
+  const videoCanvasCtx = canvasElem.getContext('2d');
+  videoCanvasCtx.drawImage(videoElem, srcX, srcY, srcW, srcH, 0, 0, width, height);
+
+  return canvasElem.toDataURL('image/png');
+};
+
+const onWindowLoad = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.cursor = 'crosshair';
+
+  ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+};
+
+const onMouseDown = event => {
+  mouseDown = true;
+  startPoint.x = event.screenX;
+  startPoint.y = event.screenY;
+};
+
+const onMouseUp = async event => {
+  if (!mouseDown) {
+    return;
   }
-}
+
+  mouseDown = false;
+
+  const dataURL = await takeScreenshot({
+    x: Math.min(event.screenX, startPoint.x),
+    y: Math.min(event.screenY, startPoint.y),
+    width: Math.abs(event.screenX - startPoint.x),
+    height: Math.abs(event.screenY - startPoint.y)
+  });
+
+  ipcRenderer.send('task', {
+    type: 'add',
+    task: {
+      type: 'image',
+      payload: dataURL
+    }
+  });
+
+  ipcRenderer.send('command', 'close-screenshot-windows');
+};
+
+const onMouseMove = event => {
+  if (!mouseDown) {
+    return;
+  }
+
+  clearCanvas();
+
+  const x = startPoint.x - window.screenX;
+  const y = startPoint.y - window.screenY;
+  const width = event.screenX - startPoint.x;
+  const height = event.screenY - startPoint.y;
+
+  ctx.fillRect(x, y, width, height);
+};
+
+
+window.addEventListener('load', onWindowLoad);
+canvas.addEventListener('mousedown', onMouseDown);
+canvas.addEventListener('mouseup', onMouseUp);
+canvas.addEventListener('mousemove', onMouseMove);
