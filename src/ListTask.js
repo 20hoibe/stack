@@ -1,4 +1,4 @@
-import React from 'react';
+import {h, Component} from 'preact';
 import {connect} from './connect';
 import * as ipc from './ipc';
 
@@ -8,7 +8,7 @@ const progressBarStyle = {
 
 export default connect(state => ({
   tasks: state.tasks
-}))(class CreateTask extends React.Component {
+}))(class CreateTask extends Component {
 
   state = {
     deleter: undefined
@@ -20,7 +20,7 @@ export default connect(state => ({
 
   createDeleteButton(index) {
     return (
-      <button onClick={this.handleDeleteClick} className="btn btn-sm btn-danger float-right" data-index={index}>Delete</button>
+      <button onClick={this.handleDeleteClick} class="btn btn-sm btn-danger float-right" data-index={index}>Delete</button>
     );
   }
 
@@ -56,42 +56,42 @@ export default connect(state => ({
 
   render() {
     return (
-      <React.Fragment>
+      <div>
         <h5>Task List</h5>
-        <ul className="list-group">
+        <ul class="list-group">
           {this.props.tasks && this.props.tasks.map((task, index) => {
             const deleteButton = this.createDeleteButton(index);
 
             let content;
             switch (task.type) {
-              case 'text': {
-                content = task.payload;
-                break;
-              }
-              case 'image': {
-                content = (<img src={task.payload} className="img-thumbnail" />);
-                break;
-              }
+            case 'text': {
+              content = task.payload;
+              break;
+            }
+            case 'image': {
+              content = (<img src={task.payload} class="img-thumbnail" />);
+              break;
+            }
             }
 
             const classes = `list-group-item list-group-item-action ${index === 0 ? 'active' : ''} ${(index === (this.state.deleter && this.state.deleter.index)) ? 'fade-out' : ''}`;
 
             return (
-              <li key={task.id} className={classes}>
-                <div className="row">
-                  <div className="col-8">{index+1}. {content} <span class="badge badge-primary badge-pill">20min</span></div>
-                  <div className="col-4">{deleteButton}</div>
+              <li key={task.id} class={classes}>
+                <div class="row">
+                  <div class="col-8">{index+1}. {content} <span class="badge badge-primary badge-pill">20min</span></div>
+                  <div class="col-4">{deleteButton}</div>
                 </div>
                 {index === 0 && (
-                  <div className="progress mt-3">
-                    <div className="progress-bar progress-bar-striped progress-bar-animated bg-success" style={progressBarStyle}></div>
+                  <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style={progressBarStyle} />
                   </div>
                 )}
               </li>
             );
           })}
         </ul>
-      </React.Fragment>
+      </div>
     );
   }
 });

@@ -2,37 +2,42 @@
   "name": "stack",
   "version": "0.1.0",
   "private": true,
-  "main": "public/electron.js",
+  "main": "src/electron.js",
   "dependencies": {
     "electron-is-dev": "^1.0.1",
+    "preact": "^8.3.1",
     "react": "^16.5.2",
-    "react-dom": "^16.5.2",
-    "react-scripts": "1.1.5",
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "react-dev": "BROWSER=none npm start",
-    "electron-dev": "nodemon --watch public/electron.js node_modules/.bin/electron .",
-    "all-dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron-pack": "build build/electron.js",
+    "start": "npm run all-dev",
+    "build": "parcel build ./src/index.html ./src/screenshot.html --out-dir=build --public-url ./",
+    "all-dev": "concurrently \"BROWSER=none npm run preact-dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "preact-dev": "parcel ./src/index.html ./src/screenshot.html -p 3000 --out-dir=build-dev",
+    "electron-dev": "nodemon --watch src/electron.js node_modules/.bin/electron .",
+    "lint": "eslint src",
+    "electron-pack": "build src/electron.js",
     "preelectron-pack": "npm run build"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
     "concurrently": "^4.0.1",
     "electron": "^3.0.0",
     "electron-builder": "^20.28.4",
+    "eslint": "^5.6.1",
     "nodemon": "^1.18.4",
+    "parcel-bundler": "^1.10.1",
     "wait-on": "^3.0.1"
   },
-  "homepage": "./",
   "build": {
     "appId": "com.xyz",
     "files": [
       "build/**/*",
+      "assets/**/*",
+      "src/**/*",
       "node_modules/**/*"
     ],
     "directories": {

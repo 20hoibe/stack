@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
 const uuid = require('uuid');
@@ -16,6 +17,10 @@ const logRenderer = what => {
 const log = (origin, what) => {
   console.log(origin, what);
 };
+
+// Some windows prevent close, but only hide. If quit is true,
+// then close events must not be prevented, because app is to be quitted.
+let quit = false;
 
 
 const stateFilePath = app.getPath('userData') + '/state.json';
@@ -53,7 +58,7 @@ const setWindowState = (id, windowState) => {
 
 const createWindow = (param, {width, height}) => {
   const window = new BrowserWindow({width, height, show: false});
-  window.loadURL(isDev ? `http://localhost:3000` : `file://${__dirname}/../build/index.html`);
+  window.loadURL(isDev ? `http://localhost:3000/index.html` : `file://${__dirname}/../build/index.html`);
 
   // postpone show window, until loaded
   window.webContents.once('dom-ready', () => {
@@ -71,15 +76,29 @@ const createCreateTaskWindow = () => {
   createWindow({type: 'create-task'}, {width: 480, height: 120});
 };
 
+/** @type {Electron.BrowserWindow} */
 let listWindow;
 const toggleListTaskWindow = () => {
-  if (listWindow && !listWindow.isDestroyed()) {
-    listWindow.close();
-    listWindow = null;
+  if (!listWindow) {
+    listWindow = createWindow({type: 'list-task'}, {width: 640, height: 640});
+    listWindow.on('close', event => {
+      if (quit) {
+        return;
+      }
+      
+      event.preventDefault();
+      listWindow.hide();
+    });
+
     return;
   }
 
-  listWindow = createWindow({type: 'list-task'}, {width: 640, height: 640});
+  if (listWindow.isVisible()) {
+    listWindow.hide();
+  } else {
+    listWindow.show();
+  }
+  
 };
 
 let screenshotWindows = undefined;
@@ -125,7 +144,7 @@ const notifyCurrentTask = () => {
   if (!appState || !appState.tasks || appState.tasks.length === 0) {
     const notification = new Notification({title: `Stack is empty`});
     notification.show();
-    return
+    return;
   }
 
   taskNotification({description: 'Currently working on', task: appState.tasks[0]});
@@ -133,10 +152,10 @@ const notifyCurrentTask = () => {
 
 let tray;
 app.on('ready', () => {
-
   screen = require('electron').screen;
 
-  tray = new Tray(__dirname + '/assets/tray.png');
+  // asar don't like dots, so normalization is needed
+  tray = new Tray(path.normalize(__dirname + '/../assets/tray.png'));
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
@@ -157,6 +176,7 @@ app.on('ready', () => {
       postponeTask();
     }},
     {label: 'Quit', type: 'normal', click: () => {
+      quit = true;
       app.quit();
     }}
   ]);
@@ -188,7 +208,7 @@ app.on('ready', () => {
 
   globalShortcut.register('CommandOrControl+Shift+P', () => {
     postponeTask();
-  })
+  });
 });
 
 // don't remove listener to prevent app quit
@@ -201,7 +221,7 @@ const windows = new Set();
 app.on('browser-window-created', (event, window) => {
   windows.add(window);
 
-  window.once('close', () => {
+  window.once('closed', () => {
     windows.delete(window);
   });
 });
@@ -211,27 +231,27 @@ app.on('browser-window-created', (event, window) => {
 
 const taskNotification = ({description, task}) => {
   switch (task.type) {
-    case 'text': {
-      const notification = new Notification({
-        title: `${description} "${task.payload}"`
-      });
-      notification.show();
-      break;
-    }
-    case 'image': {
-      const notification = new Notification({
-        title: description,
-        icon: nativeImage.createFromDataURL(task.payload)
-      });
+  case 'text': {
+    const notification = new Notification({
+      title: `${description} "${task.payload}"`
+    });
+    notification.show();
+    break;
+  }
+  case 'image': {
+    const notification = new Notification({
+      title: description,
+      icon: nativeImage.createFromDataURL(task.payload)
+    });
 
-      notification.show();
-      break;
-    }
-    default: {
-      const notification = new Notification({title: `${description} unknown task type`});
-      notification.show();
-      break;
-    }
+    notification.show();
+    break;
+  }
+  default: {
+    const notification = new Notification({title: `${description} unknown task type`});
+    notification.show();
+    break;
+  }
   }
 };
 
@@ -262,11 +282,11 @@ const postponeTask = () => {
     return;
   }
 
-  let tasks = [...(appState.tasks || [])]
+  let tasks = [...(appState.tasks || [])];
   tasks.push(tasks.shift());
   setState({tasks});
   notifyCurrentTask();
-}
+};
 
 const deleteTask = index => {
   const oldTask = appState.tasks[index];
@@ -321,18 +341,18 @@ ipcMain.on('command', (event, arg) => {
 // task channel
 ipcMain.on('task', (event, arg) => {
   switch (arg.type) {
-    case 'add': {
-      addTask(arg.task);
-      break;
-    }
-    case 'delete': {
-      deleteTask(arg.index);
-      break;
-    }
-    default: {
-      logMain({event, arg});
-      console.warn('wot?');
-    }
+  case 'add': {
+    addTask(arg.task);
+    break;
+  }
+  case 'delete': {
+    deleteTask(arg.index);
+    break;
+  }
+  default: {
+    logMain({event, arg});
+    console.warn('wot?');
+  }
   }
 });
 

@@ -1,8 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
+import {h, render} from 'preact';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+import './index.css';
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
+const root = document.getElementById('root');
+// lastChild is important to not append
+render(<App />, root, root.lastChild);
+
+if (module.hot) {
+  module.hot.accept();
+}
