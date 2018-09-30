@@ -22,6 +22,20 @@ const log = (origin, what) => {
 // then close events must not be prevented, because app is to be quitted.
 let quit = false;
 
+// asar don't like dots, so normalization is needed
+const browserWindowIcon = path.normalize((() => {
+  switch (process.platform) {
+    case 'linux': {
+      return __dirname + '/../assets/64x64.png';
+    }
+    case 'win32': {
+      return __dirname + '/../assets/icon.ico';
+    }
+    case 'darwin': {
+      return __dirname + '/../assets/icon.icns';
+    }
+  }
+})());
 
 const stateFilePath = app.getPath('userData') + '/state.json';
 logMain(`using state file: ${stateFilePath}`);
@@ -57,7 +71,7 @@ const setWindowState = (id, windowState) => {
 
 
 const createWindow = (param, {width, height}) => {
-  const window = new BrowserWindow({width, height, show: false});
+  const window = new BrowserWindow({width, height, show: false, icon: browserWindowIcon});
   window.loadURL(isDev ? `http://localhost:3000/index.html` : `file://${__dirname}/../build/index.html`);
 
   // postpone show window, until loaded
@@ -130,7 +144,8 @@ const toggleScreenshot = () => {
       x: display.workArea.x,
       y: display.workArea.y,
       width: display.bounds.width,
-      height: display.bounds.height
+      height: display.bounds.height,
+      icon: browserWindowIcon
     });
 
     screenshotWindow.maximize();
@@ -154,8 +169,7 @@ let tray;
 app.on('ready', () => {
   screen = require('electron').screen;
 
-  // asar don't like dots, so normalization is needed
-  tray = new Tray(path.normalize(__dirname + '/../assets/tray.png'));
+  tray = new Tray(path.normalize(__dirname + '/../assets/64x64.png'));
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
