@@ -1,4 +1,6 @@
-# stack
+![Stack Logo](logo.png)
+
+# Stack
 Keep track of your tasks. But don't get lost in organization.
 
 ## Manual
