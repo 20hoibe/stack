@@ -60,6 +60,10 @@ const createWindow = (param, {width, height}) => {
   const window = new BrowserWindow({width, height, show: false});
   window.loadURL(isDev ? `http://localhost:3000/index.html` : `file://${__dirname}/../build/index.html`);
 
+  if (!isDev) {
+    window.setMenu(null);
+  }
+
   // postpone show window, until loaded
   window.webContents.once('dom-ready', () => {
     window.show();
@@ -71,9 +75,29 @@ const createWindow = (param, {width, height}) => {
   return window;
 };
 
-
+/** @type {Electron.BrowserWindow} */
+let createTaskWindow;
 const createCreateTaskWindow = () => {
-  createWindow({type: 'create-task'}, {width: 480, height: 120});
+  if (!createTaskWindow) {
+    createTaskWindow = createWindow({type: 'create-task'}, {width: 480, height: 120});
+    createTaskWindow.on('close', event => {
+      if (quit) {
+        return;
+      }
+      
+      event.preventDefault();
+      createTaskWindow.hide();
+    });
+
+    return;
+  }
+
+  if (createTaskWindow.isVisible()) {
+    createTaskWindow.hide();
+  } else {
+    createTaskWindow.show();
+  }
+  
 };
 
 /** @type {Electron.BrowserWindow} */
@@ -101,7 +125,8 @@ const toggleListTaskWindow = () => {
   
 };
 
-let screenshotWindows = undefined;
+/** @type {Electron.BrowserWindow[]} */
+let screenshotWindows;
 
 const closeScreenshotWindows = () => {
   if (!screenshotWindows) {
@@ -133,6 +158,10 @@ const toggleScreenshot = () => {
       height: display.bounds.height
     });
 
+    if (!isDev) {
+      screenshotWindow.setMenu(null);
+    }
+
     screenshotWindow.maximize();
     screenshotWindow.loadURL(isDev ? 'http://localhost:3000/screenshot.html' : `file://${__dirname}/../build/screenshot.html`);
     screenshotWindow.show();
@@ -150,6 +179,7 @@ const notifyCurrentTask = () => {
   taskNotification({description: 'Currently working on', task: appState.tasks[0]});
 };
 
+/** @type {Electron.Tray} */
 let tray;
 app.on('ready', () => {
   screen = require('electron').screen;
@@ -329,10 +359,10 @@ ipcMain.on('request-state', event => {
 // channel for simple async commands
 ipcMain.on('command', (event, arg) => {
   switch (arg) {
-    case 'close-screenshot-windows': {
-      closeScreenshotWindows();
-      break;
-    }
+  case 'close-screenshot-windows': {
+    closeScreenshotWindows();
+    break;
+  }
   }
 });
 
@@ -351,7 +381,6 @@ ipcMain.on('task', (event, arg) => {
   }
   default: {
     logMain({event, arg});
-    console.warn('wot?');
   }
   }
 });

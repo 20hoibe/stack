@@ -79,7 +79,7 @@ export default connect(state => ({
             return (
               <li key={task.id} class={classes}>
                 <div class="row">
-                  <div class="col-8">{index+1}. {content} <span class="badge badge-primary badge-pill">20min</span></div>
+                  <div class="col-8">{index+1}. {content}</div>
                   <div class="col-4">{deleteButton}</div>
                 </div>
                 {index === 0 && (

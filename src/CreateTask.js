@@ -8,20 +8,24 @@ export default connect()(class CreateTask extends Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
-    if (this.textRef) {
-      this.textRef.focus();
-    }
+    this.focusText();
   }
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
   handleKeyDown = event => {
     if (event.key === 'Escape') {
-      ipc.closeWindow();
+      ipc.hideWindow();
     }
+  };
+
+  handleVisibilityChange = () => {
+    this.resetWindow();
   };
 
   handleRefText = ref => {
@@ -37,8 +41,17 @@ export default connect()(class CreateTask extends Component {
 
     const text = this.textRef.value;
     ipc.addTextTask(text);
-    ipc.closeWindow();
+    ipc.hideWindow();
   };
+
+  resetWindow() {
+    if (!this.textRef) {
+      return;
+    }
+
+    this.textRef.value = '';
+    this.textRef.focus();
+  }
 
   render() {
     return (
