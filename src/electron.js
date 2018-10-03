@@ -224,59 +224,36 @@ app.on('ready', () => {
 
   tray = new Tray(trayIconImage);
   const menu = Menu.buildFromTemplate([
-    {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
-      createCreateTaskWindow();
-    }},
-    {label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
-      toggleScreenshot();
-    }},
-    {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {
-      notifyCurrentTask();
-    }},
-    {label: `Show List\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+L`, type: 'normal', click: () => {
-      toggleListTaskWindow();
-    }},
-    {label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`, type: 'normal', click: () => {
-      popTask();
-    }},
-    {label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`, type: 'normal', click: () => {
-      postponeTask();
-    }},
-    {label: 'Quit', type: 'normal', click: () => {
-      quit = true;
-      app.quit();
-    }}
+    {label: 'Create Task', submenu: [
+      {label: 'Text...', accelerator: 'CmdOrCtrl+Shift+J', click: createCreateTaskWindow},
+      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot},
+    ]},
+    {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+N', click: notifyCurrentTask},
+    {label: 'Show List...', accelerator: 'CmdOrCtrl+Shift+L', click: toggleListTaskWindow},
+    {label: 'Pop Task', accelerator: 'CmdOrCtrl+Shift+U', click: popTask},
+    {label: 'Postpone Task', accelerator: 'CmdOrCtrl+Shift+P', click: postponeTask},
+    {type: 'separator'},
+    {label: 'Quit', type: 'normal', click: quitApp}
   ]);
+
   tray.setTitle('Stack');
   tray.setToolTip('Stack');
   tray.setContextMenu(menu);
 });
 
 app.on('ready', () => {
-  globalShortcut.register('CommandOrControl+Shift+J', () => {
-    createCreateTaskWindow();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+K', () => {
-    toggleScreenshot();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+L', () => {
-    toggleListTaskWindow();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+U', () => {
-    popTask();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+I', () => {
-    notifyCurrentTask();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+P', () => {
-    postponeTask();
-  });
+  globalShortcut.register('CmdOrCtrl+Shift+J', createCreateTaskWindow);
+  globalShortcut.register('CmdOrCtrl+Shift+K', toggleScreenshot);
+  globalShortcut.register('CmdOrCtrl+Shift+L', toggleListTaskWindow);
+  globalShortcut.register('CmdOrCtrl+Shift+U', popTask);
+  globalShortcut.register('CmdOrCtrl+Shift+I', notifyCurrentTask);
+  globalShortcut.register('CmdOrCtrl+Shift+P', postponeTask);
 });
+
+const quitApp = () => {
+  quit = true;
+  app.quit();
+};
 
 // don't remove listener to prevent app quit
 app.on('window-all-closed', () => {});
