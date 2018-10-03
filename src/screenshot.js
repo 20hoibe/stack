@@ -26,7 +26,7 @@ const getDesktopStream = async () => {
       }
     });
   } catch (e) {
-    throw new Error(`Unable to get desktop stream ${sourceId}`)
+    throw new Error('Unable to get screen stream');
   }
 
   return mediaStream;
@@ -59,7 +59,7 @@ const getVirtualScreenBound = () => {
 const takeScreenshot = async ({x, y, width, height}) => {
   clearCanvas();
   canvas.style.cursor = 'none';
-  await shortWait(); 
+  await shortWait();
 
   const stream = await getDesktopStream();
 

@@ -1,10 +1,10 @@
-import React from 'react';
+import {h, Component} from 'preact';
 const {ipcRenderer, remote} = window.require('electron');
 
 const id = remote.getCurrentWindow().id;
 
 export const connect = stateToPropsMapFn => innerClass => {
-  class ConnectClass extends React.Component {
+  class ConnectClass extends Component {
 
     state = {
       appState: {}

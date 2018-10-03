@@ -20,3 +20,7 @@ export const deleteTask = index => {
 export const closeWindow = () => {
   remote.getCurrentWindow().close();
 };
+
+export const hideWindow = () => {
+  remote.getCurrentWindow().hide();
+};
