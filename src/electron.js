@@ -18,8 +18,10 @@ const log = (origin, what) => {
   console.log(origin, what);
 };
 
-// don't show in dock
-app.dock.hide();
+if (process.platform === 'darwin') {
+  // don't show in dock
+  app.dock.hide();
+}
 
 // Some windows prevent close, but only hide. If quit is true,
 // then close events must not be prevented, because app is to be quitted.
