@@ -100,6 +100,31 @@ const createCreateTaskWindow = () => {
   
 };
 
+let aboutWindow;
+const toggleAboutWindow = () => {
+  if (!aboutWindow) {
+    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 500});
+    aboutWindow.on('close', event => {
+      event.preventDefault();
+      aboutWindow.webContents.send('hide');
+      setTimeout(() => aboutWindow.hide(), 50);
+    });
+    aboutWindow.webContents.on('new-window', (event, url) => {
+      event.preventDefault();
+      require('electron').shell.openExternal(url);
+    });
+    return;
+  }
+
+  if (aboutWindow.isVisible()) {
+    aboutWindow.webContents.send('hide');
+    setTimeout(() => aboutWindow.hide(), 50);
+  } else {
+    aboutWindow.show();
+    aboutWindow.webContents.send('show');
+  }
+};
+
 /** @type {Electron.BrowserWindow} */
 let listWindow;
 const toggleListTaskWindow = () => {
@@ -109,7 +134,7 @@ const toggleListTaskWindow = () => {
       if (quit) {
         return;
       }
-      
+
       event.preventDefault();
       listWindow.hide();
     });
@@ -122,7 +147,7 @@ const toggleListTaskWindow = () => {
   } else {
     listWindow.show();
   }
-  
+
 };
 
 /** @type {Electron.BrowserWindow[]} */
@@ -204,6 +229,9 @@ app.on('ready', () => {
     }},
     {label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`, type: 'normal', click: () => {
       postponeTask();
+    }},
+    {label: `About\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+A`, type: 'normal', click: () => {
+      toggleAboutWindow ();
     }},
     {label: 'Quit', type: 'normal', click: () => {
       quit = true;

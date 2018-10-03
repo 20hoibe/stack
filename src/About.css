@@ -1,0 +1,91 @@
+:root {
+  --background: #da811c;
+  --bottom: #595352;
+  --top: #332d2b;
+  --border: #262120;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background-color: var(--background);
+  text-align: center;
+  height: 100%;
+}
+
+.container {
+  width: 100px;
+  height: 230px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.stack {
+  display: block;
+  width: 90px;
+  height: 90px;
+  position: absolute;
+  top: -120px;
+  border-radius: 8px;
+  transform: rotate(-28deg) skewX(48deg);
+  box-shadow: -12px 8px 20px 0px rgba(0, 0, 0, .4);
+  border-bottom: 5px solid var(--background);
+  border-left: 7px solid var(--background);
+  opacity: 0;
+  transition: none;
+}
+
+.stack.stacked {
+  opacity: 1;
+  transition: all 400ms ease;
+}
+
+.first {
+  background-color: var(--top);
+  background-image: linear-gradient(to top right, var(--top), var(--bottom));
+  border-color: var(--border);
+}
+
+.first.stacked {
+  top: 120px;
+  transition: all 400ms ease;
+}
+
+.second {
+  background-color: var(--top);
+  background-image: linear-gradient(to top right, var(--top), var(--bottom));
+  border-color: var(--border);
+}
+
+.second.stacked {
+  top: 90px;
+  transition: all 400ms ease;
+}
+
+.third {
+  background-color: var(--bottom);
+  background-image: linear-gradient(to top right, var(--top), var(--bottom));
+  border-color: var(--border);
+}
+
+.third.stacked {
+  top: 60px;
+  transition: all 400ms ease;
+}
+
+.fourth {
+  background-color: var(--bottom);
+  background-image: linear-gradient(to top, var(--top));
+  border-color: var(--border);
+}
+
+.fourth.stacked {
+  top: 30px;
+  transition: all 400ms ease;
+}
+
+.centered {
+  text-align: center;
+}

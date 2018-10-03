@@ -2,6 +2,7 @@ import {h, Component } from 'preact';
 import {connect} from './connect';
 import CreateTask from './CreateTask';
 import ListTask from './ListTask';
+import About from './About';
 
 export default connect(state => ({
   tasks: state.tasks
@@ -15,6 +16,9 @@ export default connect(state => ({
     }
     case 'list-task': {
       return (<ListTask />);
+    }
+    case 'about': {
+      return (<About />);
     }
     default: {
       return 'unknown type';
