@@ -18,6 +18,11 @@ const log = (origin, what) => {
   console.log(origin, what);
 };
 
+if (process.platform === 'darwin') {
+  // don't show in dock
+  app.dock.hide();
+}
+
 // Some windows prevent close, but only hide. If quit is true,
 // then close events must not be prevented, because app is to be quitted.
 let quit = false;
@@ -33,6 +38,21 @@ const browserWindowIcon = path.normalize((() => {
     }
     case 'darwin': {
       return __dirname + '/../assets/icon.icns';
+    }
+  }
+})());
+
+// asar don't like dots, so normalization is needed
+const trayIcon = path.normalize((() => {
+  switch (process.platform) {
+    case 'linux': {
+      return __dirname + '/../assets/64x64.png';
+    }
+    case 'win32': {
+      return __dirname + '/../assets/icon.ico';
+    }
+    case 'darwin': {
+      return __dirname + '/../assets/iconTemplate.png';
     }
   }
 })());
@@ -199,7 +219,10 @@ let tray;
 app.on('ready', () => {
   screen = require('electron').screen;
 
-  tray = new Tray(path.normalize(__dirname + '/../assets/64x64.png'));
+  const trayIconImage = nativeImage.createFromPath(trayIcon);
+  trayIconImage.setTemplateImage(true);
+
+  tray = new Tray(trayIconImage);
   const menu = Menu.buildFromTemplate([
     {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
       createCreateTaskWindow();
