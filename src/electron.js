@@ -4,6 +4,8 @@ const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, na
 const isDev = require('electron-is-dev');
 const uuid = require('uuid');
 const isMac = process.platform === 'darwin';
+
+/** @type {Electron.Screen} */
 let screen; // lazy loaded
 
 const logMain = what => {
@@ -104,8 +106,44 @@ const safeCloseOrDestroyWindow = window => {
   }
 };
 
-const createWindow = (param, {width, height}) => {
-  const window = new BrowserWindow({width, height, show: false, icon: browserWindowIcon});
+/**
+ * @param {Electron.BrowserWindow} window 
+ */
+const moveWindowToCursorScreenCenter = window => {
+  if (!window) {
+    return;
+  }
+
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const windowSize = window.getSize();
+
+  const targetRect = display.workArea;
+  const x = targetRect.x + (targetRect.width - windowSize[0]) / 2;
+  const y = targetRect.y + (targetRect.height - windowSize[1]) / 2;
+
+  // only integers allowed, else exception thrown, wtf.
+  window.setPosition(x|0, y|0, false);
+};
+
+const createWindow = (param, {width, height, alwaysOnTop = false, fixedSize = false, openOnCursorScreenCenter = true}) => {
+  const window = new BrowserWindow({
+    icon: browserWindowIcon,
+    show: false, // show window, when loaded
+
+    resizable: !fixedSize,      // Linux: always resizable
+    maximizable: !fixedSize,    // Linux: always maximizable
+    fullscreenable: !fixedSize, // macOS: if window resizable/maximizable, it can go fullscreen
+
+    width,
+    height,
+    
+    alwaysOnTop,
+  });
+
+  if (openOnCursorScreenCenter) {
+    moveWindowToCursorScreenCenter(window);
+  }
+
   window.loadURL(isDev ? `http://localhost:3000/index.html` : `file://${__dirname}/../build/index.html`);
 
   if (!isDev) {
@@ -127,7 +165,7 @@ const createWindow = (param, {width, height}) => {
 let createTaskWindow;
 const createCreateTaskWindow = () => {
   if (!createTaskWindow) {
-    createTaskWindow = createWindow({type: 'create-task'}, {width: 480, height: 120});
+    createTaskWindow = createWindow({type: 'create-task'}, {width: 480, height: 120, fixedSize: true, alwaysOnTop: true});
     createTaskWindow.on('close', event => {
       if (quit) {
         return;
@@ -143,6 +181,7 @@ const createCreateTaskWindow = () => {
   if (createTaskWindow.isVisible()) {
     createTaskWindow.hide();
   } else {
+    moveWindowToCursorScreenCenter(createTaskWindow);
     createTaskWindow.show();
   }
 
@@ -193,6 +232,7 @@ const toggleListTaskWindow = () => {
   if (listWindow.isVisible()) {
     listWindow.hide();
   } else {
+    moveWindowToCursorScreenCenter(listWindow);
     listWindow.show();
   }
 
