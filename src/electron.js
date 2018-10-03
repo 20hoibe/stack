@@ -107,7 +107,7 @@ const safeCloseOrDestroyWindow = window => {
 };
 
 /**
- * @param {Electron.BrowserWindow} window 
+ * @param {Electron.BrowserWindow} window
  */
 const moveWindowToCursorScreenCenter = window => {
   if (!window) {
@@ -136,7 +136,7 @@ const createWindow = (param, {width, height, alwaysOnTop = false, fixedSize = fa
 
     width,
     height,
-    
+
     alwaysOnTop,
   });
 
@@ -190,7 +190,7 @@ const createCreateTaskWindow = () => {
 let aboutWindow;
 const toggleAboutWindow = () => {
   if (!aboutWindow) {
-    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 500});
+    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 500, fixedSize: true, alwaysOnTop: true});
     aboutWindow.on('close', event => {
       event.preventDefault();
       aboutWindow.webContents.send('hide');
