@@ -12,7 +12,7 @@
   "scripts": {
     "start": "npm run all-dev",
     "build": "parcel build ./src/index.html ./src/screenshot.html --out-dir=build --public-url ./",
-    "all-dev": "concurrently \"BROWSER=none npm run preact-dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "all-dev": "concurrently \"npm run preact-dev\" \"wait-on http://localhost:3000/index.html && electron .\"",
     "preact-dev": "parcel ./src/index.html ./src/screenshot.html -p 3000 --out-dir=build-dev",
     "electron-dev": "nodemon --watch src/electron.js node_modules/.bin/electron .",
     "lint": "eslint src",
