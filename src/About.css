@@ -5,17 +5,8 @@
   --border: #262120;
 }
 
-html {
-  height: 100%;
-}
-
-body {
-  background-color: var(--background);
+.stack-container {
   text-align: center;
-  height: 100%;
-}
-
-.container {
   width: 100px;
   height: 230px;
   margin: 0 auto;

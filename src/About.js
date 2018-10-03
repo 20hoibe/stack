@@ -38,24 +38,24 @@ export default connect()(class About extends Component {
       setTimeout(() => {
         box.classList.add('stacked');
       }, idx * this.TIME_PER_STACK_ELEMENT);
-    };
+    }
   };
 
   hideStack = () => {
     let boxes = document.getElementsByClassName('stack');
     for (let idx = 0; idx < boxes.length; ++idx) {
       boxes[idx].classList.remove('stacked');
-    };
+    }
   };
 
   render() {
     return (
       <div>
-        <div class="container">
-          <span id="elem0" class="stack first"></span>
-          <span id="elem1" class="stack second"></span>
-          <span id="elem2" class="stack third"></span>
-          <span id="elem3" class="stack fourth"></span>
+        <div class="stack-container">
+          <span id="elem0" class="stack first" />
+          <span id="elem1" class="stack second" />
+          <span id="elem2" class="stack third" />
+          <span id="elem3" class="stack fourth" />
         </div>
         <h2 class="centered">Stack</h2>
         <h5 class="centered">Created in 2018 by 20hoibe</h5>
