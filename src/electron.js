@@ -90,7 +90,7 @@ const setWindowState = (id, windowState) => {
 
 
 /**
- * @param {Electron.BrowserWindow} window 
+ * @param {Electron.BrowserWindow} window
  */
 const safeCloseOrDestroyWindow = window => {
   if (!window || window.isDestroyed()) {
@@ -132,7 +132,7 @@ const createCreateTaskWindow = () => {
       if (quit) {
         return;
       }
-      
+
       event.preventDefault();
       createTaskWindow.hide();
     });
@@ -145,7 +145,7 @@ const createCreateTaskWindow = () => {
   } else {
     createTaskWindow.show();
   }
-  
+
 };
 
 /** @type {Electron.BrowserWindow} */
@@ -157,7 +157,7 @@ const toggleListTaskWindow = () => {
       if (quit) {
         return;
       }
-      
+
       event.preventDefault();
       listWindow.hide();
     });
@@ -170,7 +170,7 @@ const toggleListTaskWindow = () => {
   } else {
     listWindow.show();
   }
-  
+
 };
 
 /** @type {Electron.BrowserWindow[]} */
@@ -204,7 +204,7 @@ const toggleScreenshot = () => {
       y: display.workArea.y,
       width: display.bounds.width,
       height: display.bounds.height,
-      skipTaskbar: true
+      skipTaskbar: true,
       icon: browserWindowIcon
     });
 
