@@ -1,8 +1,14 @@
 {
   "name": "stack",
   "version": "0.1.0",
+  "description": "Keep track of your tasks. But don't get lost in organization.",
   "private": true,
   "main": "src/electron.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/20hoibe/stack"
+  },
   "dependencies": {
     "electron-is-dev": "^1.0.1",
     "preact": "^8.3.1",
@@ -35,8 +41,12 @@
     "sass": "^1.14.1",
     "wait-on": "^3.0.1"
   },
+  "bugs": {
+    "url": "https://github.com/20hoibe/stack/issues"
+  },
   "build": {
-    "appId": "com.xyz",
+    "appId": "stack",
+    "productName": "stack",
     "files": [
       "build/**/*",
       "assets/**/*",
@@ -45,6 +55,13 @@
     ],
     "directories": {
       "buildResources": "assets"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "snap"
+      ],
+      "category": "Utility"
     }
   }
 }

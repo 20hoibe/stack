@@ -18,10 +18,44 @@ const log = (origin, what) => {
   console.log(origin, what);
 };
 
+if (process.platform === 'darwin') {
+  // don't show in dock
+  app.dock.hide();
+}
+
 // Some windows prevent close, but only hide. If quit is true,
 // then close events must not be prevented, because app is to be quitted.
 let quit = false;
 
+// asar don't like dots, so normalization is needed
+const browserWindowIcon = path.normalize((() => {
+  switch (process.platform) {
+    case 'linux': {
+      return __dirname + '/../assets/64x64.png';
+    }
+    case 'win32': {
+      return __dirname + '/../assets/icon.ico';
+    }
+    case 'darwin': {
+      return __dirname + '/../assets/icon.icns';
+    }
+  }
+})());
+
+// asar don't like dots, so normalization is needed
+const trayIcon = path.normalize((() => {
+  switch (process.platform) {
+    case 'linux': {
+      return __dirname + '/../assets/64x64.png';
+    }
+    case 'win32': {
+      return __dirname + '/../assets/icon.ico';
+    }
+    case 'darwin': {
+      return __dirname + '/../assets/iconTemplate.png';
+    }
+  }
+})());
 
 const stateFilePath = app.getPath('userData') + '/state.json';
 logMain(`using state file: ${stateFilePath}`);
@@ -55,9 +89,23 @@ const setWindowState = (id, windowState) => {
 };
 
 
+/**
+ * @param {Electron.BrowserWindow} window
+ */
+const safeCloseOrDestroyWindow = window => {
+  if (!window || window.isDestroyed()) {
+    return;
+  }
+
+  if (window.isClosable()) {
+    window.close();
+  } else {
+    window.destroy();
+  }
+};
 
 const createWindow = (param, {width, height}) => {
-  const window = new BrowserWindow({width, height, show: false});
+  const window = new BrowserWindow({width, height, show: false, icon: browserWindowIcon});
   window.loadURL(isDev ? `http://localhost:3000/index.html` : `file://${__dirname}/../build/index.html`);
 
   if (!isDev) {
@@ -84,7 +132,7 @@ const createCreateTaskWindow = () => {
       if (quit) {
         return;
       }
-      
+
       event.preventDefault();
       createTaskWindow.hide();
     });
@@ -97,7 +145,7 @@ const createCreateTaskWindow = () => {
   } else {
     createTaskWindow.show();
   }
-  
+
 };
 
 let aboutWindow;
@@ -159,7 +207,7 @@ const closeScreenshotWindows = () => {
   }
 
   for (const screenshotWindow of screenshotWindows) {
-    screenshotWindow.close();
+    safeCloseOrDestroyWindow(screenshotWindow);
   }
 
   screenshotWindows = undefined;
@@ -180,7 +228,9 @@ const toggleScreenshot = () => {
       x: display.workArea.x,
       y: display.workArea.y,
       width: display.bounds.width,
-      height: display.bounds.height
+      height: display.bounds.height,
+      skipTaskbar: true,
+      icon: browserWindowIcon
     });
 
     if (!isDev) {
@@ -209,65 +259,42 @@ let tray;
 app.on('ready', () => {
   screen = require('electron').screen;
 
-  // asar don't like dots, so normalization is needed
-  tray = new Tray(path.normalize(__dirname + '/../assets/tray.png'));
+  const trayIconImage = nativeImage.createFromPath(trayIcon);
+  trayIconImage.setTemplateImage(true);
+
+  tray = new Tray(trayIconImage);
   const menu = Menu.buildFromTemplate([
-    {label: `Create Task\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+J`, type: 'normal', click: () => {
-      createCreateTaskWindow();
-    }},
-    {label: `Make Screenshot\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+K`, type: 'normal', click: () => {
-      toggleScreenshot();
-    }},
-    {label: `Show Current Task\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+I`, type: 'normal', click: () => {
-      notifyCurrentTask();
-    }},
-    {label: `Show List\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+L`, type: 'normal', click: () => {
-      toggleListTaskWindow();
-    }},
-    {label: `Pop Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+U`, type: 'normal', click: () => {
-      popTask();
-    }},
-    {label: `Postpone Task\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+P`, type: 'normal', click: () => {
-      postponeTask();
-    }},
-    {label: `About\t\t\t\t${!isMac ? 'Ctrl' : 'Cmd'}+Shift+A`, type: 'normal', click: () => {
-      toggleAboutWindow ();
-    }},
-    {label: 'Quit', type: 'normal', click: () => {
-      quit = true;
-      app.quit();
-    }}
+    {label: 'Create Task', submenu: [
+      {label: 'Text...', accelerator: 'CmdOrCtrl+Shift+J', click: createCreateTaskWindow},
+      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot},
+    ]},
+    {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+N', click: notifyCurrentTask},
+    {label: 'Show List...', accelerator: 'CmdOrCtrl+Shift+L', click: toggleListTaskWindow},
+    {label: 'Pop Task', accelerator: 'CmdOrCtrl+Shift+U', click: popTask},
+    {label: 'Postpone Task', accelerator: 'CmdOrCtrl+Shift+P', click: postponeTask},
+    {type: 'separator'},
+    {label: 'About', type: 'normal', click: toggleAboutWindow},
+    {label: 'Quit', type: 'normal', click: quitApp}
   ]);
+
   tray.setTitle('Stack');
   tray.setToolTip('Stack');
   tray.setContextMenu(menu);
 });
 
 app.on('ready', () => {
-  globalShortcut.register('CommandOrControl+Shift+J', () => {
-    createCreateTaskWindow();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+K', () => {
-    toggleScreenshot();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+L', () => {
-    toggleListTaskWindow();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+U', () => {
-    popTask();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+I', () => {
-    notifyCurrentTask();
-  });
-
-  globalShortcut.register('CommandOrControl+Shift+P', () => {
-    postponeTask();
-  });
+  globalShortcut.register('CmdOrCtrl+Shift+J', createCreateTaskWindow);
+  globalShortcut.register('CmdOrCtrl+Shift+K', toggleScreenshot);
+  globalShortcut.register('CmdOrCtrl+Shift+L', toggleListTaskWindow);
+  globalShortcut.register('CmdOrCtrl+Shift+U', popTask);
+  globalShortcut.register('CmdOrCtrl+Shift+I', notifyCurrentTask);
+  globalShortcut.register('CmdOrCtrl+Shift+P', postponeTask);
 });
+
+const quitApp = () => {
+  quit = true;
+  app.quit();
+};
 
 // don't remove listener to prevent app quit
 app.on('window-all-closed', () => {});
