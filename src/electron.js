@@ -55,6 +55,20 @@ const setWindowState = (id, windowState) => {
 };
 
 
+/**
+ * @param {Electron.BrowserWindow} window 
+ */
+const safeCloseOrDestroyWindow = window => {
+  if (!window || window.isDestroyed()) {
+    return;
+  }
+
+  if (window.isClosable()) {
+    window.close();
+  } else {
+    window.destroy();
+  }
+};
 
 const createWindow = (param, {width, height}) => {
   const window = new BrowserWindow({width, height, show: false});
@@ -134,7 +148,7 @@ const closeScreenshotWindows = () => {
   }
 
   for (const screenshotWindow of screenshotWindows) {
-    screenshotWindow.close();
+    safeCloseOrDestroyWindow(screenshotWindow);
   }
 
   screenshotWindows = undefined;
@@ -155,7 +169,8 @@ const toggleScreenshot = () => {
       x: display.workArea.x,
       y: display.workArea.y,
       width: display.bounds.width,
-      height: display.bounds.height
+      height: display.bounds.height,
+      skipTaskbar: true
     });
 
     if (!isDev) {

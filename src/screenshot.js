@@ -8,8 +8,6 @@ const ctx = canvas.getContext('2d');
 
 const clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-const shortWait = async () => await new Promise(resolve => setTimeout(resolve, 50));
-
 /**
  * `navigator.mediaDevices.getUserMedia` promisified
  */
@@ -57,9 +55,12 @@ const getVirtualScreenBound = () => {
  * Takes a screenshot with all params being screen coords, returning a image/png data URL string.
  */
 const takeScreenshot = async ({x, y, width, height}) => {
-  clearCanvas();
   canvas.style.cursor = 'none';
-  await shortWait();
+  clearCanvas();
+
+  // Linux/Ubuntu: still got red rectangle in screenshot: longer short wait
+  // what didn't work: 50ms, 200ms, 400ms
+  await new Promise(resolve => setTimeout(resolve, 800));
 
   const stream = await getDesktopStream();
 
@@ -101,12 +102,18 @@ const onWindowLoad = () => {
   ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
 };
 
+/**
+ * @param {MouseEvent} event 
+ */
 const onMouseDown = event => {
   mouseDown = true;
   startPoint.x = event.screenX;
   startPoint.y = event.screenY;
 };
 
+/**
+ * @param {MouseEvent} event 
+ */
 const onMouseUp = async event => {
   if (!mouseDown) {
     return;
@@ -132,6 +139,9 @@ const onMouseUp = async event => {
   ipcRenderer.send('command', 'close-screenshot-windows');
 };
 
+/**
+ * @param {MouseEvent} event 
+ */
 const onMouseMove = event => {
   if (!mouseDown) {
     return;
@@ -147,8 +157,18 @@ const onMouseMove = event => {
   ctx.fillRect(x, y, width, height);
 };
 
+/**
+ * @param {KeyboardEvent} event 
+ */
+const onKeyUp = event => {
+  if (event.code === 'Escape') {
+    ipcRenderer.send('command', 'close-screenshot-windows');
+  }
+};
+
 
 window.addEventListener('load', onWindowLoad);
+window.addEventListener('keyup', onKeyUp);
 canvas.addEventListener('mousedown', onMouseDown);
 canvas.addEventListener('mouseup', onMouseUp);
 canvas.addEventListener('mousemove', onMouseMove);
