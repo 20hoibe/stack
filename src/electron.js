@@ -190,7 +190,7 @@ const createCreateTaskWindow = () => {
 let aboutWindow;
 const toggleAboutWindow = () => {
   if (!aboutWindow) {
-    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 480, fixedSize: true, alwaysOnTop: true});
+    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 500, fixedSize: true, alwaysOnTop: true});
     aboutWindow.on('close', event => {
       event.preventDefault();
       aboutWindow.webContents.send('hide');

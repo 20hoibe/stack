@@ -57,7 +57,8 @@ export default connect()(class About extends Component {
           <span id="elem2" class="stack third" />
           <span id="elem3" class="stack fourth">Stack</span>
         </div>
-        <h5 class="centered">Created in 2018 by 20hoibe</h5>
+        <h5 class="centered">{process.env.npm_package_build_copyright}</h5>
+        <h5 class="centered">v{process.env.npm_package_version}</h5>
         <h5 class="centered">Find us on</h5>
         <h5 class="centered"><a href="https://github.com/20hoibe" target="_blank">Github</a></h5>
         <h5 class="centered"><a href="https://twitter.com/20hoibe" target="_blank">Twitter</a></h5>
