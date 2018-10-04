@@ -4,6 +4,10 @@
   "description": "Keep track of your tasks. But don't get lost in organization.",
   "private": true,
   "main": "src/electron.js",
+  "contributors": [
+    "Philipp Renoth <renoth@wildoak.de>",
+    "Simon Hofmann <dev@simon-hofmann.org>"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -47,6 +51,7 @@
   "build": {
     "appId": "stack",
     "productName": "stack",
+    "copyright": "Copyright © 2018 20hoibe",
     "files": [
       "build/**/*",
       "assets/**/*",
