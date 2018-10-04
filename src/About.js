@@ -50,14 +50,13 @@ export default connect()(class About extends Component {
 
   render() {
     return (
-      <div>
-        <div class="stack-container">
+      <div class="stack-container">
+        <div class="stack-background">
           <span id="elem0" class="stack first" />
           <span id="elem1" class="stack second" />
           <span id="elem2" class="stack third" />
-          <span id="elem3" class="stack fourth" />
+          <span id="elem3" class="stack fourth">Stack</span>
         </div>
-        <h2 class="centered">Stack</h2>
         <h5 class="centered">Created in 2018 by 20hoibe</h5>
         <h5 class="centered">Find us on</h5>
         <h5 class="centered"><a href="https://github.com/20hoibe" target="_blank">Github</a></h5>

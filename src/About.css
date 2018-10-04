@@ -1,16 +1,26 @@
 :root {
-  --background: #da811c;
-  --bottom: #c96100;
-  --top: #964a0c;
-  --border: #52413e;
+  --background: #E3652B;
+  --bottom: #75706b;
+  --top: #554d47;
+  --border: #3a3534;
+}
+
+.stack-background {
+  text-align: center;
+  width: 100px;
+  height: 270px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .stack-container {
   text-align: center;
-  width: 100px;
-  height: 230px;
+  width: 250px;
+  height: 250px;
   margin: 0 auto;
   position: relative;
+  background-color: var(--background);
+  border-radius: 50%;
 }
 
 .stack {
@@ -18,7 +28,7 @@
   width: 90px;
   height: 90px;
   position: absolute;
-  top: -120px;
+  left: 5px;
   border-radius: 8px;
   transform: rotate(-28deg) skewX(48deg);
   box-shadow: -12px 8px 20px 0px rgba(0, 0, 0, .4);
@@ -37,10 +47,11 @@
   background-color: var(--top);
   background-image: linear-gradient(to top right, var(--top), var(--bottom));
   border-color: var(--border);
+  top: 105px;
 }
 
 .first.stacked {
-  top: 120px;
+  top: 125px;
   transition: all 400ms ease;
 }
 
@@ -48,10 +59,11 @@
   background-color: var(--top);
   background-image: linear-gradient(to top right, var(--top), var(--bottom));
   border-color: var(--border);
+  top: 75px;
 }
 
 .second.stacked {
-  top: 90px;
+  top: 95px;
   transition: all 400ms ease;
 }
 
@@ -59,10 +71,11 @@
   background-color: var(--bottom);
   background-image: linear-gradient(to top right, var(--top), var(--bottom));
   border-color: var(--border);
+  top: 45px;
 }
 
 .third.stacked {
-  top: 60px;
+  top: 65px;
   transition: all 400ms ease;
 }
 
@@ -70,10 +83,12 @@
   background-color: var(--bottom);
   background-image: linear-gradient(to top, var(--top));
   border-color: var(--border);
+  top: 15px;
+  font-size: 2em;
 }
 
 .fourth.stacked {
-  top: 30px;
+  top: 35px;
   transition: all 400ms ease;
 }
 
