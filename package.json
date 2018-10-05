@@ -4,10 +4,6 @@
   "description": "Keep track of your tasks. But don't get lost in organization.",
   "private": true,
   "main": "src/electron.js",
-  "contributors": [
-    "Philipp Renoth <renoth@wildoak.de>",
-    "Simon Hofmann <dev@simon-hofmann.org>"
-  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -42,7 +38,6 @@
     "eslint-plugin-react": "^7.11.1",
     "nodemon": "^1.18.4",
     "parcel-bundler": "^1.10.1",
-    "sass": "^1.14.1",
     "wait-on": "^3.0.1"
   },
   "bugs": {

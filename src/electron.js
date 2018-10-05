@@ -190,8 +190,12 @@ const createCreateTaskWindow = () => {
 let aboutWindow;
 const toggleAboutWindow = () => {
   if (!aboutWindow) {
-    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 500, fixedSize: true, alwaysOnTop: true});
+    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 520, fixedSize: true, alwaysOnTop: true});
     aboutWindow.on('close', event => {
+      if (quit) {
+        return;
+      }
+
       event.preventDefault();
       aboutWindow.webContents.send('hide');
       setTimeout(() => aboutWindow.hide(), 50);
@@ -207,6 +211,7 @@ const toggleAboutWindow = () => {
     aboutWindow.webContents.send('hide');
     setTimeout(() => aboutWindow.hide(), 50);
   } else {
+    moveWindowToCursorScreenCenter(aboutWindow);
     aboutWindow.show();
     aboutWindow.webContents.send('show');
   }
@@ -306,7 +311,7 @@ app.on('ready', () => {
   const menu = Menu.buildFromTemplate([
     {label: 'Create Task', submenu: [
       {label: 'Text...', accelerator: 'CmdOrCtrl+Shift+J', click: createCreateTaskWindow},
-      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot},
+      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot}
     ]},
     {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+N', click: notifyCurrentTask},
     {label: 'Show List...', accelerator: 'CmdOrCtrl+Shift+L', click: toggleListTaskWindow},

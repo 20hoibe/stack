@@ -1,14 +1,14 @@
 import {h, Component} from 'preact';
-import {connect} from './connect';
 const {ipcRenderer} = window.require('electron');
 import './About.css';
 import * as ipc from './ipc';
 
-export default connect()(class About extends Component {
+const TIME_PER_STACK_ELEMENT = 400;
+
+export default class About extends Component {
 
   constructor(props) {
     super(props);
-    this.TIME_PER_STACK_ELEMENT = 400;
     ipcRenderer.on('show', () => {
       this.showStack();
     });
@@ -31,22 +31,22 @@ export default connect()(class About extends Component {
     }
   };
 
-  showStack = () => {
-    let boxes = document.getElementsByClassName('stack');
+  showStack() {
+    const boxes = document.getElementsByClassName('stack');
     for (let idx = 0; idx < boxes.length; ++idx) {
-      let box = document.getElementById(`elem${idx}`);
+      const box = document.getElementById(`elem${idx}`);
       setTimeout(() => {
         box.classList.add('stacked');
-      }, idx * this.TIME_PER_STACK_ELEMENT);
+      }, idx * TIME_PER_STACK_ELEMENT);
     }
-  };
+  }
 
-  hideStack = () => {
-    let boxes = document.getElementsByClassName('stack');
+  hideStack() {
+    const boxes = document.getElementsByClassName('stack');
     for (let idx = 0; idx < boxes.length; ++idx) {
       boxes[idx].classList.remove('stacked');
     }
-  };
+  }
 
   render() {
     return (
@@ -55,7 +55,7 @@ export default connect()(class About extends Component {
           <span id="elem0" class="stack first" />
           <span id="elem1" class="stack second" />
           <span id="elem2" class="stack third" />
-          <span id="elem3" class="stack fourth">Stack</span>
+          <span id="elem3" class="stack fourth" />
         </div>
         <h5 class="centered">{process.env.npm_package_build_copyright}</h5>
         <h5 class="centered">v{process.env.npm_package_version}</h5>
@@ -66,4 +66,4 @@ export default connect()(class About extends Component {
       </div>
     );
   }
-});
+}

@@ -1,5 +1,5 @@
 :root {
-  --background: #E3652B;
+  --background: rgb(220, 100, 12);
   --bottom: #75706b;
   --top: #554d47;
   --border: #3a3534;
@@ -8,7 +8,7 @@
 .stack-background {
   text-align: center;
   width: 100px;
-  height: 270px;
+  height: 290px;
   margin: 0 auto;
   position: relative;
 }
@@ -20,20 +20,20 @@
   margin: 0 auto;
   position: relative;
   background-color: var(--background);
-  border-radius: 50%;
+  box-shadow: 0px 50px 30px -15px rgba(0, 0, 0, .5), 0px 8px 8px 0px inset rgba(255, 255, 255, .2);
+  border-radius: 5%;
 }
 
 .stack {
   display: block;
-  width: 90px;
-  height: 90px;
+  width: 180px;
+  height: 35px;
   position: absolute;
-  left: 5px;
-  border-radius: 8px;
-  transform: rotate(-28deg) skewX(48deg);
-  box-shadow: -12px 8px 20px 0px rgba(0, 0, 0, .4);
-  border-bottom: 5px solid var(--background);
-  border-left: 7px solid var(--background);
+  left: -40px;
+  border-radius: 5px;
+  transform: skewX(-35deg);
+  border-bottom: 3px solid var(--background);
+  border-right: 3px solid var(--background);
   opacity: 0;
   transition: none;
 }
@@ -45,50 +45,46 @@
 
 .first {
   background-color: var(--top);
-  background-image: linear-gradient(to top right, var(--top), var(--bottom));
   border-color: var(--border);
-  top: 105px;
+  top: 170px;
 }
 
 .first.stacked {
-  top: 125px;
+  top: 190px;
   transition: all 400ms ease;
 }
 
 .second {
   background-color: var(--top);
-  background-image: linear-gradient(to top right, var(--top), var(--bottom));
   border-color: var(--border);
-  top: 75px;
+  top: 115px;
 }
 
 .second.stacked {
-  top: 95px;
+  top: 135px;
   transition: all 400ms ease;
 }
 
 .third {
-  background-color: var(--bottom);
-  background-image: linear-gradient(to top right, var(--top), var(--bottom));
+  background-color: var(--top);
   border-color: var(--border);
-  top: 45px;
+  top: 60px;
 }
 
 .third.stacked {
-  top: 65px;
+  top: 80px;
   transition: all 400ms ease;
 }
 
 .fourth {
-  background-color: var(--bottom);
-  background-image: linear-gradient(to top, var(--top));
+  background-color: var(--top);
   border-color: var(--border);
-  top: 15px;
+  top: 5px;
   font-size: 2em;
 }
 
 .fourth.stacked {
-  top: 35px;
+  top: 25px;
   transition: all 400ms ease;
 }
 
