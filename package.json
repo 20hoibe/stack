@@ -46,6 +46,7 @@
   "build": {
     "appId": "stack",
     "productName": "stack",
+    "copyright": "Copyright © 2018 20hoibe",
     "files": [
       "build/**/*",
       "assets/**/*",

@@ -1,0 +1,93 @@
+:root {
+  --background: rgb(220, 100, 12);
+  --bottom: #75706b;
+  --top: #554d47;
+  --border: #3a3534;
+}
+
+.stack-background {
+  text-align: center;
+  width: 100px;
+  height: 290px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.stack-container {
+  text-align: center;
+  width: 250px;
+  height: 250px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--background);
+  box-shadow: 0px 50px 30px -15px rgba(0, 0, 0, .5), 0px 8px 8px 0px inset rgba(255, 255, 255, .2);
+  border-radius: 5%;
+}
+
+.stack {
+  display: block;
+  width: 180px;
+  height: 35px;
+  position: absolute;
+  left: -40px;
+  border-radius: 5px;
+  transform: skewX(-35deg);
+  border-bottom: 3px solid var(--background);
+  border-right: 3px solid var(--background);
+  opacity: 0;
+  transition: none;
+}
+
+.stack.stacked {
+  opacity: 1;
+  transition: all 400ms ease;
+}
+
+.first {
+  background-color: var(--top);
+  border-color: var(--border);
+  top: 170px;
+}
+
+.first.stacked {
+  top: 190px;
+  transition: all 400ms ease;
+}
+
+.second {
+  background-color: var(--top);
+  border-color: var(--border);
+  top: 115px;
+}
+
+.second.stacked {
+  top: 135px;
+  transition: all 400ms ease;
+}
+
+.third {
+  background-color: var(--top);
+  border-color: var(--border);
+  top: 60px;
+}
+
+.third.stacked {
+  top: 80px;
+  transition: all 400ms ease;
+}
+
+.fourth {
+  background-color: var(--top);
+  border-color: var(--border);
+  top: 5px;
+  font-size: 2em;
+}
+
+.fourth.stacked {
+  top: 25px;
+  transition: all 400ms ease;
+}
+
+.centered {
+  text-align: center;
+}

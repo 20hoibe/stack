@@ -107,7 +107,7 @@ const safeCloseOrDestroyWindow = window => {
 };
 
 /**
- * @param {Electron.BrowserWindow} window 
+ * @param {Electron.BrowserWindow} window
  */
 const moveWindowToCursorScreenCenter = window => {
   if (!window) {
@@ -136,7 +136,7 @@ const createWindow = (param, {width, height, alwaysOnTop = false, fixedSize = fa
 
     width,
     height,
-    
+
     alwaysOnTop,
   });
 
@@ -185,6 +185,36 @@ const createCreateTaskWindow = () => {
     createTaskWindow.show();
   }
 
+};
+
+let aboutWindow;
+const toggleAboutWindow = () => {
+  if (!aboutWindow) {
+    aboutWindow = createWindow({type: 'about'}, {width: 300, height: 520, fixedSize: true, alwaysOnTop: true});
+    aboutWindow.on('close', event => {
+      if (quit) {
+        return;
+      }
+
+      event.preventDefault();
+      aboutWindow.webContents.send('hide');
+      setTimeout(() => aboutWindow.hide(), 50);
+    });
+    aboutWindow.webContents.on('new-window', (event, url) => {
+      event.preventDefault();
+      require('electron').shell.openExternal(url);
+    });
+    return;
+  }
+
+  if (aboutWindow.isVisible()) {
+    aboutWindow.webContents.send('hide');
+    setTimeout(() => aboutWindow.hide(), 50);
+  } else {
+    moveWindowToCursorScreenCenter(aboutWindow);
+    aboutWindow.show();
+    aboutWindow.webContents.send('show');
+  }
 };
 
 /** @type {Electron.BrowserWindow} */
@@ -281,13 +311,14 @@ app.on('ready', () => {
   const menu = Menu.buildFromTemplate([
     {label: 'Create Task', submenu: [
       {label: 'Text...', accelerator: 'CmdOrCtrl+Shift+J', click: createCreateTaskWindow},
-      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot},
+      {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot}
     ]},
     {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+N', click: notifyCurrentTask},
     {label: 'Show List...', accelerator: 'CmdOrCtrl+Shift+L', click: toggleListTaskWindow},
     {label: 'Pop Task', accelerator: 'CmdOrCtrl+Shift+U', click: popTask},
     {label: 'Postpone Task', accelerator: 'CmdOrCtrl+Shift+P', click: postponeTask},
     {type: 'separator'},
+    {label: 'About', type: 'normal', click: toggleAboutWindow},
     {label: 'Quit', type: 'normal', click: quitApp}
   ]);
 
