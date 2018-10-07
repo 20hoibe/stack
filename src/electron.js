@@ -313,7 +313,7 @@ app.on('ready', () => {
       {label: 'Text...', accelerator: 'CmdOrCtrl+Shift+J', click: createCreateTaskWindow},
       {label: 'Screenshot...', accelerator: 'CmdOrCtrl+Shift+K', click: toggleScreenshot}
     ]},
-    {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+N', click: notifyCurrentTask},
+    {label: 'Show Current Task', accelerator: 'CmdOrCtrl+Shift+I', click: notifyCurrentTask},
     {label: 'Show List...', accelerator: 'CmdOrCtrl+Shift+L', click: toggleListTaskWindow},
     {label: 'Pop Task', accelerator: 'CmdOrCtrl+Shift+U', click: popTask},
     {label: 'Postpone Task', accelerator: 'CmdOrCtrl+Shift+P', click: postponeTask},
