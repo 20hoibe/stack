@@ -3,7 +3,6 @@ const path = require('path');
 const {app, ipcMain, BrowserWindow, globalShortcut, Notification, Tray, Menu, nativeImage} = require('electron');
 const isDev = require('electron-is-dev');
 const uuid = require('uuid');
-const isMac = process.platform === 'darwin';
 
 /** @type {Electron.Screen} */
 let screen; // lazy loaded
@@ -20,42 +19,48 @@ const log = (origin, what) => {
   console.log(origin, what);
 };
 
+// Some windows prevent close, but only hide. If quit is true,
+// then close events must not be prevented, because app is to be quitted.
+let quit = false;
+
+if (!app.requestSingleInstanceLock()) {
+  quit = true;
+  app.quit();
+  return;
+}
+
 if (process.platform === 'darwin') {
   // don't show in dock
   app.dock.hide();
 }
 
-// Some windows prevent close, but only hide. If quit is true,
-// then close events must not be prevented, because app is to be quitted.
-let quit = false;
-
 // asar don't like dots, so normalization is needed
 const browserWindowIcon = path.normalize((() => {
   switch (process.platform) {
-    case 'linux': {
-      return __dirname + '/../assets/64x64.png';
-    }
-    case 'win32': {
-      return __dirname + '/../assets/icon.ico';
-    }
-    case 'darwin': {
-      return __dirname + '/../assets/icon.icns';
-    }
+  case 'linux': {
+    return __dirname + '/../assets/64x64.png';
+  }
+  case 'win32': {
+    return __dirname + '/../assets/icon.ico';
+  }
+  case 'darwin': {
+    return __dirname + '/../assets/icon.icns';
+  }
   }
 })());
 
 // asar don't like dots, so normalization is needed
 const trayIcon = path.normalize((() => {
   switch (process.platform) {
-    case 'linux': {
-      return __dirname + '/../assets/64x64.png';
-    }
-    case 'win32': {
-      return __dirname + '/../assets/icon.ico';
-    }
-    case 'darwin': {
-      return __dirname + '/../assets/iconTemplate.png';
-    }
+  case 'linux': {
+    return __dirname + '/../assets/64x64.png';
+  }
+  case 'win32': {
+    return __dirname + '/../assets/icon.ico';
+  }
+  case 'darwin': {
+    return __dirname + '/../assets/iconTemplate.png';
+  }
   }
 })());
 
@@ -137,7 +142,7 @@ const createWindow = (param, {width, height, alwaysOnTop = false, fixedSize = fa
     width,
     height,
 
-    alwaysOnTop,
+    alwaysOnTop
   });
 
   if (openOnCursorScreenCenter) {
