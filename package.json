@@ -62,6 +62,17 @@
         "snap"
       ],
       "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "msi"
+      ]
     }
   }
 }
